@@ -1,89 +1,84 @@
 <template>
   <div class="container">
-    <div class="sidebar" :class="{ active: isSidebarCollapsed }">
+    <div
+      class="sidebar"
+      :class="{ active: isSidebarCollapsed }"
+      @mouseover="isSidebarCollapsed = false"
+      @mouseleave="isSidebarCollapsed = true"
+    >
       <div class="head">
         <div class="user-img">
           <img src="\images\sidebar\assistant.png" alt="" />
         </div>
         <div class="user-details">
-          <p class="title">web developer</p>
+          <p class="title">Admin</p>
           <p class="name">John Doe</p>
         </div>
       </div>
 
       <div class="nav">
         <div class="menu">
-          <p class="title">Main</p>
           <ul>
-            <li :class="{ active: activeMenu === 'dashboard' }">
-              <a href="#" @click="setActiveMenu('dashboard')">
+            <!-- Updated links to use <router-link> -->
+            <li :class="{ active: activeMenu === 'account' }">
+              <router-link to="/account" @click="setActiveMenu('account')">
                 <img class="img-li" src="\images\sidebar\assistant.png" alt="" />
-                <span class="text">Dashboard</span>
-              </a>
+                <span class="text">Tài khoản</span>
+              </router-link>
             </li>
-            <!-- <li
-              :class="{ active: activeMenu === 'audience' }"
-              @click.stop="toggleSubmenu('audience')"
-            >
-              <a href="#">
+            <li :class="{ active: activeMenu === 'admin' }">
+              <router-link to="/admin" @click="setActiveMenu('admin')">
                 <img class="img-li" src="\images\sidebar\assistant.png" alt="" />
-                <span class="text">Audience</span>
-                <i class="arrow ph-bold ph-caret-down"></i>
-              </a>
-              <ul class="sub-menu" v-if="openSubmenu === 'audience'">
-                <li>
-                  <a href="#" @click="setActiveMenu('users')">
-                    <span class="text">Users</span>
-                  </a>
-                </li>
-                <li>
-                  <a href="#" @click="setActiveMenu('subscribers')">
-                    <span class="text">Subscribers</span>
-                  </a>
-                </li>
-              </ul>
-            </li> -->
-            <li :class="{ active: activeMenu === 'dashboard' }">
-              <a href="#" @click="setActiveMenu('dashboard')">
-                <img class="img-li" src="\images\sidebar\assistant.png" alt="" />
-                <span class="text">Dashboard</span>
-              </a>
+                <span class="text">Admin</span>
+              </router-link>
             </li>
-            <li :class="{ active: activeMenu === 'dashboard' }">
-              <a href="#" @click="setActiveMenu('dashboard')">
+            <li :class="{ active: activeMenu === 'customer' }">
+              <router-link to="/customer" @click="setActiveMenu('customer')">
                 <img class="img-li" src="\images\sidebar\assistant.png" alt="" />
-                <span class="text">Dashboard</span>
-              </a>
+                <span class="text">Khách hàng</span>
+              </router-link>
             </li>
-            <li :class="{ active: activeMenu === 'dashboard' }">
-              <a href="#" @click="setActiveMenu('dashboard')">
+            <li :class="{ active: activeMenu === 'driver' }">
+              <router-link to="/driver" @click="setActiveMenu('driver')">
                 <img class="img-li" src="\images\sidebar\assistant.png" alt="" />
-                <span class="text">Dashboard</span>
-              </a>
+                <span class="text">Tài xế</span>
+              </router-link>
             </li>
-            <li :class="{ active: activeMenu === 'dashboard' }">
-              <a href="#" @click="setActiveMenu('dashboard')">
+            <li :class="{ active: activeMenu === 'vehicle-seat' }">
+              <router-link to="/vehicle-seat" @click="setActiveMenu('vehicle-seat')">
                 <img class="img-li" src="\images\sidebar\assistant.png" alt="" />
-                <span class="text">Dashboard</span>
-              </a>
+                <span class="text">Xe & Ghế xe</span>
+              </router-link>
             </li>
-            <li :class="{ active: activeMenu === 'dashboard' }">
-              <a href="#" @click="setActiveMenu('dashboard')">
+            <li :class="{ active: activeMenu === 'route' }">
+              <router-link to="/route" @click="setActiveMenu('route')">
                 <img class="img-li" src="\images\sidebar\assistant.png" alt="" />
-                <span class="text">Dashboard</span>
-              </a>
+                <span class="text">Tuyến xe</span>
+              </router-link>
             </li>
-          </ul>
-        </div>
-
-        <div class="menu">
-          <p class="title">Account</p>
-          <ul>
-            <li>
-              <a href="#" @click="handleHelp">
-                <img class="img-li" src="\images\sidebar\help.svg" alt="" />
-                <span class="text">Help</span>
-              </a>
+            <li :class="{ active: activeMenu === 'route-schedule' }">
+              <router-link to="/route-schedule" @click="setActiveMenu('route-schedule')">
+                <img class="img-li" src="\images\sidebar\assistant.png" alt="" />
+                <span class="text">Lịch tuyến xe</span>
+              </router-link>
+            </li>
+            <li :class="{ active: activeMenu === 'trip' }">
+              <router-link to="/trip" @click="setActiveMenu('trip')">
+                <img class="img-li" src="\images\sidebar\assistant.png" alt="" />
+                <span class="text">Chuyến xe</span>
+              </router-link>
+            </li>
+            <li :class="{ active: activeMenu === 'invoice' }">
+              <router-link to="/invoice" @click="setActiveMenu('invoice')">
+                <img class="img-li" src="\images\sidebar\assistant.png" alt="" />
+                <span class="text">Hóa đơn</span>
+              </router-link>
+            </li>
+            <li :class="{ active: activeMenu === 'report' }">
+              <router-link to="/" @click="setActiveMenu('report')">
+                <img class="img-li" src="\images\sidebar\assistant.png" alt="" />
+                <span class="text">Báo cáo thống kê</span>
+              </router-link>
             </li>
             <li>
               <a href="#" @click="handleLogout">
@@ -94,11 +89,6 @@
           </ul>
         </div>
       </div>
-
-      <div class="menu-btn" @click="toggleSidebar">
-        <img class="img-li" src="\images\sidebar\menu.png" alt="" />
-        <i class="ph-bold" :class="isSidebarCollapsed ? 'ph-arrow-right' : 'ph-arrow-left'"></i>
-      </div>
     </div>
   </div>
 </template>
@@ -107,25 +97,15 @@
 import { ref } from 'vue'
 
 // State for sidebar and menu
-const isSidebarCollapsed = ref(false)
-const activeMenu = ref('dashboard')
+const isSidebarCollapsed = ref(true)
+const activeMenu = ref('')
 const openSubmenu = ref(null)
-
-// Toggle sidebar collapse
-const toggleSidebar = () => {
-  isSidebarCollapsed.value = !isSidebarCollapsed.value
-}
 
 // Set active menu item
 const setActiveMenu = (menu) => {
   activeMenu.value = menu
   // Close any open submenu when selecting a menu item
   openSubmenu.value = null
-}
-
-// Toggle submenu visibility
-const toggleSubmenu = (submenu) => {
-  openSubmenu.value = openSubmenu.value === submenu ? null : submenu
 }
 
 // Placeholder methods for help and logout
@@ -149,22 +129,21 @@ const handleLogout = () => {
 }
 
 .container {
-  width: 100%;
+  width: 120px;
   min-height: 100vh;
 }
 
 .sidebar {
-  width: 256px;
+  width: 200px;
   height: 100vh;
   display: flex;
   flex-direction: column;
   gap: 20px;
   background-color: #fff;
   padding: 24px;
-  border-radius: 30px;
   transition: width 0.3s ease;
   position: relative;
-  /* background-color: rgb(77, 221, 77); */
+  box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.1); /* Shadow effect */
 }
 
 .sidebar.active {
@@ -175,7 +154,7 @@ const handleLogout = () => {
   display: flex;
   gap: 20px;
   padding-bottom: 20px;
-  border-bottom: 1px solid #f6f6f6;
+  border-bottom: 1px solid #dbdada;
 }
 
 .user-img {
@@ -208,42 +187,32 @@ const handleLogout = () => {
 .nav {
   flex: 1;
 }
-
 .menu ul li {
   list-style: none;
-  margin-bottom: 5px;
 }
-
+li {
+  margin: 10px 0px;
+}
 .menu ul li a {
   display: flex;
   align-items: center;
   gap: 10px;
   font-size: 14px;
   font-weight: 500;
-  color: #757575;
+  color: black;
   text-decoration: none;
-  padding: 12px 8px;
+  padding: 10px 8px;
   border-radius: 8px;
   transition: all 0.3s;
-}
-
-.menu ul li:hover a,
-.menu ul li.active a {
-  color: #000;
-  background-color: #f6f6f6;
-}
-
-.menu ul li .icon {
-  font-size: 20px;
-}
-
-.menu ul li .text {
-  flex: 1;
 }
 
 .menu ul li .arrow {
   font-size: 14px;
   transition: all 0.3s;
+}
+.menu ul li a:hover,
+.menu ul li.active a {
+  background-color: rgb(202, 255, 127);
 }
 
 .menu ul li.active .arrow {
@@ -284,14 +253,6 @@ const handleLogout = () => {
   background-color: #fff;
 }
 
-.menu-btn:hover i {
-  color: #000;
-}
-
-.menu-btn i {
-  transition: all 0.3s;
-}
-
 .sidebar.active .user-details {
   display: none;
 }
@@ -330,11 +291,6 @@ const handleLogout = () => {
   background-color: #000;
   transform: rotate(45deg);
   z-index: -1;
-}
-.sidebar.active .menu > ul > li > a:hover .text {
-  left: 50px;
-  opacity: 1;
-  visibility: visible;
 }
 .sidebar.active .menu .sub-menu {
   position: absolute;
