@@ -4,10 +4,10 @@ import api from './api' // Import the api instance from api.js
 // Create a new driver
 export const createDriver = async (driver) => {
   try {
-    const response = await api.post('/drivers', driver) // Using api instance to make a POST request
+    const response = await api.post('/drivers', driver)
     return response
   } catch (error) {
-    console.error('Error creating driver:', error)
+    console.error('Error creating driver:', error.response?.data?.message || error.message)
     throw error
   }
 }

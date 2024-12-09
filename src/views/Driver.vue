@@ -68,30 +68,23 @@
         <!-- User Information Section -->
         <div class="row">
           <div class="col-md-6 mb-3">
-            <label class="form-label">Họ và Tên</label>
+            <label class="form-label">Họ và Tên<span class="text-danger">*</span></label>
             <input type="text" class="form-control" v-model="form.user.fullName" required />
           </div>
           <div class="col-md-6 mb-3">
-            <label class="form-label">Số điện thoại</label>
-            <input
-              type="tel"
-              class="form-control"
-              v-model="form.user.phoneNumber"
-              pattern="[0-9]{10}"
-              title="Số điện thoại phải có 10 chữ số"
-              required
-            />
+            <label class="form-label">Số điện thoại<span class="text-danger">*</span></label>
+            <input type="tel" class="form-control" v-model="form.user.phoneNumber" required />
           </div>
         </div>
 
         <div class="row">
           <div class="col-md-6 mb-3">
             <label class="form-label">Email</label>
-            <input type="email" class="form-control" v-model="form.user.email" required />
+            <input type="email" class="form-control" v-model="form.user.email" />
           </div>
           <div class="col-md-6 mb-3">
             <label class="form-label">Giới tính</label>
-            <select class="form-control" v-model="form.user.gender" required>
+            <select class="form-control" v-model="form.user.gender">
               <option value="male">Nam</option>
               <option value="female">Nữ</option>
               <option value="other">Khác</option>
@@ -111,7 +104,6 @@
               class="form-control"
               v-model="form.user.dateOfBirth"
               :max="getMaxBirthDate()"
-              required
             />
           </div>
         </div>
@@ -119,18 +111,11 @@
         <!-- Driver License Section -->
         <div class="row">
           <div class="col-md-6 mb-3">
-            <label class="form-label">Số bằng lái</label>
-            <input
-              type="text"
-              class="form-control"
-              v-model="form.licenseNumber"
-              pattern="[A-Z0-9]+"
-              title="Số bằng lái chỉ chứa chữ in hoa và số"
-              required
-            />
+            <label class="form-label">Số bằng lái<span class="text-danger">*</span></label>
+            <input type="text" class="form-control" v-model="form.licenseNumber" required />
           </div>
           <div class="col-md-6 mb-3">
-            <label class="form-label">Hạng bằng</label>
+            <label class="form-label">Hạng bằng<span class="text-danger">*</span></label>
             <select class="form-control" v-model="form.licenseClass" required>
               <option value="A1">A1</option>
               <option value="A2">A2</option>
@@ -145,17 +130,9 @@
 
         <div class="row">
           <div class="col-md-6 mb-3">
-            <label class="form-label">Ngày cấp bằng lái</label>
-            <input
-              type="date"
-              class="form-control"
-              v-model="form.licenseIssueDate"
-              :max="getCurrentDate()"
-              required
-            />
-          </div>
-          <div class="col-md-6 mb-3">
-            <label class="form-label">Ngày hết hạn bằng lái</label>
+            <label class="form-label"
+              >Ngày hết hạn bằng lái<span class="text-danger">*</span></label
+            >
             <input
               type="date"
               class="form-control"
@@ -164,13 +141,9 @@
               required
             />
           </div>
-        </div>
-
-        <!-- Driver Status and Additional Information -->
-        <div class="row">
           <div class="col-md-6 mb-3">
             <label class="form-label">Trạng thái tài xế</label>
-            <select class="form-control" v-model="form.driverStatus" required>
+            <select class="form-control" v-model="form.driverStatus">
               <option value="available">Sẵn sàng</option>
               <option value="unavailable">Không sẵn sàng</option>
               <option value="on_leave">Đang nghỉ phép</option>
@@ -213,7 +186,6 @@ const columns = {
   'user.gender': 'Giới tính',
   'user.address': 'Địa chỉ',
   'user.dateOfBirth': 'Ngày sinh',
-  'user.userRole': 'Vai trò',
   licenseNumber: 'Số bằng lái',
   licenseClass: 'Hạng bằng',
   licenseExpiry: 'Ngày hết hạn bằng lái',
@@ -365,15 +337,31 @@ const closeModal = () => {
 // Submit handler
 const handleSubmit = async () => {
   try {
-    if (currentDriver.value) {
-      await updateDriver(currentDriver.value.driverId, form.value)
-    } else {
-      await createDriver(form.value)
+    const driverData = {
+      user: {
+        ...form.value.user,
+        userId: currentDriver.value?.user?.userId, // Use existing user ID if updating
+        userRole: 'driver', // Explicitly set user role
+      },
+      licenseNumber: form.value.licenseNumber,
+      licenseClass: form.value.licenseClass,
+      licenseExpiry: form.value.licenseExpiry,
+      driverStatus: form.value.driverStatus,
     }
+
+    if (currentDriver.value) {
+      await updateDriver(currentDriver.value.driverId, driverData)
+    } else {
+      await createDriver(driverData)
+    }
+
+    // Fetch updated drivers and close modal in one step
     await fetchDrivers()
     closeModal()
   } catch (error) {
     console.error('Error saving driver:', error)
+    // Optional: Add user-friendly error handling
+    alert('Phải nhập đủ thông tin cần thiết!')
   }
 }
 
