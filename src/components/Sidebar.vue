@@ -164,7 +164,7 @@ const handleLogout = () => {
 }
 
 .sidebar.expanded {
-  width: 200px;
+  width: 210px;
 }
 
 .head {
