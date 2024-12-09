@@ -435,9 +435,4 @@ onMounted(fetchDrivers)
 .text-primary {
   color: #007bff !important;
 }
-
-/* Optional: Make the table more readable with smaller text */
-.table {
-  font-size: 0.9rem;
-}
 </style>

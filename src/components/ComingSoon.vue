@@ -54,10 +54,10 @@ onMounted(() => {
 
 @keyframes snow {
   0% {
-    transform: translateY(-75%);
+    transform: translateY(-25%);
   }
   100% {
-    transform: translateY(100%);
+    transform: translateY(200%);
   }
 }
 .background-image {
