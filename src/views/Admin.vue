@@ -8,8 +8,10 @@
     <table class="table table-striped table-bordered table-hover">
       <thead>
         <tr>
-          <th class="title-table" v-for="(label, column) in columns" :key="column">{{ label }}</th>
-          <th class="title-table">Hành động</th>
+          <th class="title-table text-center" v-for="(label, column) in columns" :key="column">
+            {{ label }}
+          </th>
+          <th class="title-table text-center action">Hành động</th>
         </tr>
         <tr>
           <th v-for="(label, column) in columns" :key="column + '-filter'">
@@ -25,10 +27,10 @@
       </thead>
       <tbody>
         <tr v-for="admin in filteredAdmins" :key="admin.adminId">
-          <td v-for="(label, column) in columns" :key="column">
+          <td v-for="(label, column) in columns" :key="column" class="text-center">
             {{ formatColumnValue(getNestedValue(admin, column), column) }}
           </td>
-          <td>
+          <td class="action">
             <button class="btn btn-warning btn-sm me-2" @click="openModal(admin)">
               <i class="fas fa-edit"></i>
             </button>
@@ -117,6 +119,7 @@ const columns = {
   'user.fullName': 'Tên đầy đủ',
   'user.phoneNumber': 'Số điện thoại',
   'user.email': 'Email',
+  'user.password_hash': 'Password',
   'user.gender': 'Giới tính',
   'user.address': 'Địa chỉ',
   'user.dateOfBirth': 'Ngày sinh',
@@ -135,6 +138,7 @@ const form = ref({
     fullName: '',
     phoneNumber: '',
     email: '',
+    password_hash: '',
     gender: 'male',
     address: '',
     dateOfBirth: '',
@@ -203,6 +207,7 @@ const openModal = (admin = null) => {
           fullName: '',
           phoneNumber: '',
           email: '',
+          password_hash: '',
           gender: 'male',
           address: '',
           dateOfBirth: '',
@@ -221,6 +226,7 @@ const closeModal = () => {
       fullName: '',
       phoneNumber: '',
       email: '',
+      password_hash: '',
       gender: 'male',
       address: '',
       dateOfBirth: '',
@@ -275,5 +281,8 @@ onMounted(fetchAdmins)
 .title-table {
   background-color: #83c3ff;
   color: white;
+}
+.action {
+  width: 90px;
 }
 </style>

@@ -58,12 +58,6 @@ const activeMenu = ref('')
 // Menu items for easier management
 const menuItems = [
   {
-    key: 'account',
-    to: '/account',
-    icon: '\\images\\sidebar\\account.svg',
-    text: 'Tài khoản',
-  },
-  {
     key: 'admin',
     to: '/admin',
     icon: '\\images\\sidebar\\account.svg',

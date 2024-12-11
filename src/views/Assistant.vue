@@ -8,8 +8,10 @@
     <table class="table table-striped table-bordered table-hover">
       <thead>
         <tr>
-          <th class="title-table" v-for="(label, column) in columns" :key="column">{{ label }}</th>
-          <th class="title-table">Hành động</th>
+          <th class="title-table text-center" v-for="(label, column) in columns" :key="column">
+            {{ label }}
+          </th>
+          <th class="title-table text-center action">Hành động</th>
         </tr>
         <tr>
           <th v-for="(label, column) in columns" :key="column + '-filter'">
@@ -25,10 +27,10 @@
       </thead>
       <tbody>
         <tr v-for="assistant in filteredAssistants" :key="assistant.assistantId">
-          <td v-for="(label, column) in columns" :key="column">
+          <td v-for="(label, column) in columns" :key="column" class="text-center">
             {{ formatColumnValue(getNestedValue(assistant, column), column) }}
           </td>
-          <td>
+          <td class="action">
             <button class="btn btn-warning btn-sm me-2" @click="openModal(assistant)">
               <i class="fas fa-edit"></i>
             </button>
@@ -40,7 +42,7 @@
       </tbody>
     </table>
 
-    <CustomModal v-model="showModal" :title="currentAssistant ? 'Chỉnh sửa trợ lý' : 'Thêm trợ lý'">
+    <CustomModal v-model="showModal" :title="currentAssistant ? 'Chỉnh sửa phụ xe' : 'Thêm phụ xe'">
       <form @submit.prevent="handleSubmit">
         <!-- User Information Section -->
         <div class="row">
@@ -87,11 +89,11 @@
 
         <div class="row">
           <div class="col-md-6 mb-3">
-            <label class="form-label">Trạng thái trợ lý</label>
+            <label class="form-label">Trạng thái phụ xe</label>
             <select class="form-control" v-model="form.assistantStatus">
-              <option value="available">Có sẵn</option>
-              <option value="on trip">Đang trong chuyến</option>
-              <option value="off duty">Nghỉ làm</option>
+              <option value="available">Sẵn sàng</option>
+              <option value="on_trip">Đang trong chuyến</option>
+              <option value="off_duty">Nghỉ làm</option>
             </select>
           </div>
         </div>
@@ -100,7 +102,7 @@
       <template #footer>
         <button class="btn btn-secondary me-2" @click="closeModal">Hủy</button>
         <button class="btn btn-primary" @click="handleSubmit">
-          {{ currentAssistant ? 'Lưu thay đổi' : 'Thêm trợ lý' }}
+          {{ currentAssistant ? 'Lưu thay đổi' : 'Thêm phụ xe' }}
         </button>
       </template>
     </CustomModal>
@@ -125,15 +127,16 @@ const filters = ref({})
 
 // Columns definition
 const columns = {
-  assistantId: 'ID Trợ lý',
+  assistantId: 'ID Phụ xe',
   'user.userId': 'ID Người dùng',
   'user.fullName': 'Tên đầy đủ',
   'user.phoneNumber': 'Số điện thoại',
   'user.email': 'Email',
+  'user.password_hash': 'Password',
   'user.gender': 'Giới tính',
   'user.address': 'Địa chỉ',
   'user.dateOfBirth': 'Ngày sinh',
-  assistantStatus: 'Trạng thái trợ lý',
+  assistantStatus: 'Trạng thái phụ xe',
 }
 
 const getMaxBirthDate = () => {
@@ -149,6 +152,7 @@ const form = ref({
     fullName: '',
     phoneNumber: '',
     email: '',
+    password_hash: '',
     gender: 'male',
     address: '',
     dateOfBirth: '',
@@ -182,9 +186,9 @@ const formatColumnValue = (value, column) => {
   // Handle assistant status formatting
   if (column === 'assistantStatus') {
     const statusMap = {
-      available: 'Có sẵn',
-      'on trip': 'Đang trong chuyến',
-      'off duty': 'Nghỉ làm',
+      available: 'Sẵn sàng',
+      on_trip: 'Đang trong chuyến',
+      off_duty: 'Nghỉ làm',
     }
     return statusMap[value] || value
   }
@@ -231,6 +235,7 @@ const openModal = (assistant = null) => {
           fullName: '',
           phoneNumber: '',
           email: '',
+          password_hash: '',
           gender: 'male',
           address: '',
           dateOfBirth: '',
@@ -250,6 +255,7 @@ const closeModal = () => {
       fullName: '',
       phoneNumber: '',
       email: '',
+      password_hash: '',
       gender: 'male',
       address: '',
       dateOfBirth: '',
@@ -307,5 +313,8 @@ onMounted(fetchAssistants)
 .title-table {
   background-color: #83c3ff;
   color: white;
+}
+.action {
+  width: 90px;
 }
 </style>

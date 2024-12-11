@@ -8,8 +8,10 @@
     <table class="table table-striped table-bordered table-hover">
       <thead>
         <tr>
-          <th class="title-table" v-for="(label, column) in columns" :key="column">{{ label }}</th>
-          <th class="title-table">Hành động</th>
+          <th class="title-table text-center" v-for="(label, column) in columns" :key="column">
+            {{ label }}
+          </th>
+          <th class="title-table text-center action">Hành động</th>
         </tr>
         <tr>
           <th v-for="(label, column) in columns" :key="column + '-filter'">
@@ -25,10 +27,10 @@
       </thead>
       <tbody>
         <tr v-for="driver in filteredDrivers" :key="driver.driverId">
-          <td v-for="(label, column) in columns" :key="column">
+          <td v-for="(label, column) in columns" :key="column" class="text-center">
             {{ formatColumnValue(getNestedValue(driver, column), column) }}
           </td>
-          <td>
+          <td class="action">
             <button class="btn btn-warning btn-sm me-2" @click="openModal(driver)">
               <i class="fas fa-edit"></i>
             </button>
@@ -122,9 +124,8 @@
             <label class="form-label">Trạng thái tài xế</label>
             <select class="form-control" v-model="form.driverStatus">
               <option value="available">Sẵn sàng</option>
-              <option value="unavailable">Không sẵn sàng</option>
-              <option value="on_leave">Đang nghỉ phép</option>
-              <option value="suspended">Tạm ngưng</option>
+              <option value="on_trip">Đang trong chuyến</option>
+              <option value="off_duty">Nghỉ làm</option>
             </select>
           </div>
         </div>
@@ -158,6 +159,7 @@ const columns = {
   'user.fullName': 'Tên đầy đủ',
   'user.phoneNumber': 'Số điện thoại',
   'user.email': 'Email',
+  'user.password_hash': 'Password',
   'user.gender': 'Giới tính',
   'user.address': 'Địa chỉ',
   'user.dateOfBirth': 'Ngày sinh',
@@ -180,6 +182,7 @@ const form = ref({
     fullName: '',
     phoneNumber: '',
     email: '',
+    password_hash: '',
     gender: 'male',
     address: '',
     dateOfBirth: '',
@@ -221,9 +224,8 @@ const formatColumnValue = (value, column) => {
   if (column === 'driverStatus') {
     const statusMap = {
       available: 'Sẵn sàng',
-      unavailable: 'Không sẵn sàng',
-      on_leave: 'Đang nghỉ phép',
-      suspended: 'Tạm ngưng',
+      on_trip: 'Đang trong chuyến',
+      off_duty: 'Nghỉ làm',
     }
     return statusMap[value] || value
   }
@@ -276,6 +278,7 @@ const openModal = (driver = null) => {
           fullName: '',
           phoneNumber: '',
           email: '',
+          password_hash: '',
           gender: 'male',
           address: '',
           dateOfBirth: '',
@@ -301,6 +304,7 @@ const closeModal = () => {
       fullName: '',
       phoneNumber: '',
       email: '',
+      password_hash: '',
       gender: 'male',
       address: '',
       dateOfBirth: '',
@@ -367,5 +371,8 @@ onMounted(fetchDrivers)
 .title-table {
   background-color: #83c3ff;
   color: white;
+}
+.action {
+  width: 90px;
 }
 </style>
