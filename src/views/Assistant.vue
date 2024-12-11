@@ -1,7 +1,11 @@
 <template>
-  <div class="container-shadow bg-white p-4 rounded-lg">
+  <div class="border bg-white p-4 rounded-lg">
     <h2 class="text-primary fw-bold mb-4">Quản lý thông tin phụ xe</h2>
-    <button class="btn btn-success mb-3" @click="openModal(null)">
+    <button
+      class="btn btn-success mb-3"
+      @click="openModal(null)"
+      style="background-color: white; color: green"
+    >
       <i class="fas fa-plus"></i> Thêm phụ xe
     </button>
 
@@ -35,7 +39,7 @@
               <i class="fas fa-edit"></i>
             </button>
             <button class="btn btn-danger btn-sm" @click="handleDelete(assistant.assistantId)">
-              <i class="fas fa-trash"></i>
+              <i class="fas fa-trash-alt"></i>
             </button>
           </td>
         </tr>
@@ -310,6 +314,11 @@ onMounted(fetchAssistants)
 </script>
 
 <style scoped>
+.border {
+  border-radius: 10px;
+  margin: 30px;
+  box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.1);
+}
 .title-table {
   background-color: #83c3ff;
   color: white;
