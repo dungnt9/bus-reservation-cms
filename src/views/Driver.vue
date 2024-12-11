@@ -8,8 +8,8 @@
     <table class="table table-striped table-bordered table-hover">
       <thead>
         <tr>
-          <th v-for="(label, column) in columns" :key="column">{{ label }}</th>
-          <th>Hành động</th>
+          <th class="title-table" v-for="(label, column) in columns" :key="column">{{ label }}</th>
+          <th class="title-table">Hành động</th>
         </tr>
         <tr>
           <th v-for="(label, column) in columns" :key="column + '-filter'">
@@ -24,40 +24,17 @@
         </tr>
       </thead>
       <tbody>
-        <tr
-          v-for="driver in filteredDrivers"
-          :key="driver.driverId"
-          :class="{ editing: editingDriverId === driver.driverId }"
-        >
+        <tr v-for="driver in filteredDrivers" :key="driver.driverId">
           <td v-for="(label, column) in columns" :key="column">
-            <template v-if="editingDriverId !== driver.driverId">
-              {{ formatColumnValue(getNestedValue(driver, column), column) }}
-            </template>
-            <input
-              v-else
-              type="text"
-              class="form-control form-control-sm"
-              :value="getNestedValue(driver, column)"
-              @input="updateEditingDriver(column, $event.target.value)"
-            />
+            {{ formatColumnValue(getNestedValue(driver, column), column) }}
           </td>
           <td>
-            <template v-if="editingDriverId !== driver.driverId">
-              <button class="btn btn-warning btn-sm me-2" @click="startEditing(driver)">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button class="btn btn-danger btn-sm" @click="handleDelete(driver.driverId)">
-                <i class="fas fa-trash"></i>
-              </button>
-            </template>
-            <template v-else>
-              <button class="btn btn-success btn-sm me-2" @click="confirmEdit">
-                <i class="fas fa-check"></i> Xác nhận
-              </button>
-              <button class="btn btn-secondary btn-sm" @click="cancelEdit">
-                <i class="fas fa-times"></i> Hủy
-              </button>
-            </template>
+            <button class="btn btn-warning btn-sm me-2" @click="openModal(driver)">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn btn-danger btn-sm" @click="handleDelete(driver.driverId)">
+              <i class="fas fa-trash"></i>
+            </button>
           </td>
         </tr>
       </tbody>
@@ -172,8 +149,6 @@ import CustomModal from '../components/Modal.vue' // Import the custom modal com
 const drivers = ref([])
 const showModal = ref(false)
 const currentDriver = ref(null)
-const editingDriverId = ref(null)
-const editingDriver = ref(null)
 const filters = ref({})
 
 // Columns definition
@@ -191,13 +166,11 @@ const columns = {
   licenseExpiry: 'Ngày hết hạn bằng lái',
   driverStatus: 'Trạng thái',
 }
+
 const getMaxBirthDate = () => {
   const today = new Date()
   const minAge = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate())
   return minAge.toISOString().split('T')[0]
-}
-const getCurrentDate = () => {
-  return new Date().toISOString().split('T')[0]
 }
 
 // Initial form state
@@ -221,6 +194,7 @@ const form = ref({
   driverExperience: 0,
   notes: '',
 })
+
 // Utility function to format column values
 const formatColumnValue = (value, column) => {
   // Handle date formatting
@@ -248,12 +222,15 @@ const formatColumnValue = (value, column) => {
     const statusMap = {
       available: 'Sẵn sàng',
       unavailable: 'Không sẵn sàng',
+      on_leave: 'Đang nghỉ phép',
+      suspended: 'Tạm ngưng',
     }
     return statusMap[value] || value
   }
 
   return value || ''
 }
+
 // Computed filtered drivers
 const filteredDrivers = computed(() => {
   return drivers.value.filter((driver) => {
@@ -285,6 +262,7 @@ const openModal = (driver = null) => {
   form.value = driver
     ? {
         user: { ...driver.user },
+        driverId: driver.driverId,
         licenseNumber: driver.licenseNumber,
         licenseClass: driver.licenseClass,
         licenseIssueDate: driver.licenseIssueDate,
@@ -303,6 +281,7 @@ const openModal = (driver = null) => {
           dateOfBirth: '',
           userRole: 'driver',
         },
+        driverId: null,
         licenseNumber: '',
         licenseClass: '',
         licenseIssueDate: '',
@@ -327,10 +306,14 @@ const closeModal = () => {
       dateOfBirth: '',
       userRole: 'driver',
     },
+    driverId: null,
     licenseNumber: '',
     licenseClass: '',
+    licenseIssueDate: '',
     licenseExpiry: '',
     driverStatus: 'available',
+    driverExperience: 0,
+    notes: '',
   }
 }
 
@@ -343,6 +326,7 @@ const handleSubmit = async () => {
         userId: currentDriver.value?.user?.userId, // Use existing user ID if updating
         userRole: 'driver', // Explicitly set user role
       },
+      driverId: currentDriver.value?.driverId,
       licenseNumber: form.value.licenseNumber,
       licenseClass: form.value.licenseClass,
       licenseExpiry: form.value.licenseExpiry,
@@ -375,52 +359,13 @@ const handleDelete = async (driverId) => {
   }
 }
 
-// Inline editing methods
-const startEditing = (driver) => {
-  editingDriverId.value = driver.driverId
-  editingDriver.value = { ...driver }
-}
-
-const updateEditingDriver = (key, value) => {
-  const keys = key.split('.')
-  if (keys.length > 1) {
-    editingDriver.value[keys[0]][keys[1]] = value
-  } else {
-    editingDriver.value[key] = value
-  }
-}
-
-const confirmEdit = async () => {
-  try {
-    await updateDriver(editingDriverId.value, editingDriver.value)
-    await fetchDrivers()
-    editingDriverId.value = null
-    editingDriver.value = null
-  } catch (error) {
-    console.error('Error updating driver:', error)
-  }
-}
-
-const cancelEdit = () => {
-  editingDriverId.value = null
-  editingDriver.value = null
-}
-
 // Fetch drivers on component mount
 onMounted(fetchDrivers)
 </script>
 
 <style scoped>
-.container-shadow {
-  margin: 30px;
-  box-shadow: 4px 4px 4px 4px rgba(0, 0, 0, 0.1);
-}
-
-.editing td {
-  background-color: #f0f0f0;
-}
-
-.text-primary {
-  color: #007bff !important;
+.title-table {
+  background-color: #83c3ff;
+  color: white;
 }
 </style>

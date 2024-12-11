@@ -8,8 +8,8 @@
     <table class="table table-striped table-bordered table-hover">
       <thead>
         <tr>
-          <th v-for="(label, column) in columns" :key="column">{{ label }}</th>
-          <th>Hành động</th>
+          <th class="title-table" v-for="(label, column) in columns" :key="column">{{ label }}</th>
+          <th class="title-table">Hành động</th>
         </tr>
         <tr>
           <th v-for="(label, column) in columns" :key="column + '-filter'">
@@ -24,40 +24,17 @@
         </tr>
       </thead>
       <tbody>
-        <tr
-          v-for="customer in filteredCustomers"
-          :key="customer.customerId"
-          :class="{ editing: editingCustomerId === customer.customerId }"
-        >
+        <tr v-for="customer in filteredCustomers" :key="customer.customerId">
           <td v-for="(label, column) in columns" :key="column">
-            <template v-if="editingCustomerId !== customer.customerId">
-              {{ formatColumnValue(getNestedValue(customer, column), column) }}
-            </template>
-            <input
-              v-else
-              type="text"
-              class="form-control form-control-sm"
-              :value="getNestedValue(customer, column)"
-              @input="updateEditingCustomer(column, $event.target.value)"
-            />
+            {{ formatColumnValue(getNestedValue(customer, column), column) }}
           </td>
           <td>
-            <template v-if="editingCustomerId !== customer.customerId">
-              <button class="btn btn-warning btn-sm me-2" @click="startEditing(customer)">
-                <i class="fas fa-edit"></i>
-              </button>
-              <button class="btn btn-danger btn-sm" @click="handleDelete(customer.customerId)">
-                <i class="fas fa-trash"></i>
-              </button>
-            </template>
-            <template v-else>
-              <button class="btn btn-success btn-sm me-2" @click="confirmEdit">
-                <i class="fas fa-check"></i> Xác nhận
-              </button>
-              <button class="btn btn-secondary btn-sm" @click="cancelEdit">
-                <i class="fas fa-times"></i> Hủy
-              </button>
-            </template>
+            <button class="btn btn-warning btn-sm me-2" @click="openModal(customer)">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn btn-danger btn-sm" @click="handleDelete(customer.customerId)">
+              <i class="fas fa-trash"></i>
+            </button>
           </td>
         </tr>
       </tbody>
@@ -130,14 +107,15 @@ import {
   updateCustomer,
   deleteCustomer,
 } from '../services/customerService'
-import CustomModal from '../components/Modal.vue' // Import the custom modal component
+import CustomModal from '../components/Modal.vue'
+
+// Rest of the script remains the same as in the original code
+// The main changes are in the template and removing inline editing methods
 
 // Reactive state
 const customers = ref([])
 const showModal = ref(false)
 const currentCustomer = ref(null)
-const editingCustomerId = ref(null)
-const editingCustomer = ref(null)
 const filters = ref({})
 
 // Columns definition
@@ -175,7 +153,6 @@ const form = ref({
 
 // Utility function to format column values
 const formatColumnValue = (value, column) => {
-  // Handle date formatting
   if (
     column.includes('createdAt') ||
     column.includes('updatedAt') ||
@@ -184,7 +161,6 @@ const formatColumnValue = (value, column) => {
     return value ? new Date(value).toLocaleDateString('vi-VN') : ''
   }
 
-  // Handle gender formatting
   if (column === 'user.gender') {
     const genderMap = {
       male: 'Nam',
@@ -228,6 +204,7 @@ const openModal = (customer = null) => {
   form.value = customer
     ? {
         user: { ...customer.user },
+        customerId: customer.customerId,
       }
     : {
         user: {
@@ -239,6 +216,7 @@ const openModal = (customer = null) => {
           dateOfBirth: '',
           userRole: 'customer',
         },
+        customerId: null,
       }
   showModal.value = true
 }
@@ -256,6 +234,7 @@ const closeModal = () => {
       dateOfBirth: '',
       userRole: 'customer',
     },
+    customerId: null,
   }
 }
 
@@ -296,52 +275,13 @@ const handleDelete = async (customerId) => {
   }
 }
 
-// Inline editing methods
-const startEditing = (customer) => {
-  editingCustomerId.value = customer.customerId
-  editingCustomer.value = { ...customer }
-}
-
-const updateEditingCustomer = (key, value) => {
-  const keys = key.split('.')
-  if (keys.length > 1) {
-    editingCustomer.value[keys[0]][keys[1]] = value
-  } else {
-    editingCustomer.value[key] = value
-  }
-}
-
-const confirmEdit = async () => {
-  try {
-    await updateCustomer(editingCustomerId.value, editingCustomer.value)
-    await fetchCustomers()
-    editingCustomerId.value = null
-    editingCustomer.value = null
-  } catch (error) {
-    console.error('Error updating customer:', error)
-  }
-}
-
-const cancelEdit = () => {
-  editingCustomerId.value = null
-  editingCustomer.value = null
-}
-
 // Fetch customers on component mount
 onMounted(fetchCustomers)
 </script>
 
 <style scoped>
-.container-shadow {
-  margin: 30px;
-  box-shadow: 4px 4px 4px 4px rgba(0, 0, 0, 0.1);
-}
-
-.editing td {
-  background-color: #f0f0f0;
-}
-
-.text-primary {
-  color: #007bff !important;
+.title-table {
+  background-color: #83c3ff;
+  color: white;
 }
 </style>

@@ -82,16 +82,16 @@ const menuItems = [
     text: 'Tài xế',
   },
   {
+    key: 'assistant',
+    to: '/assistant',
+    icon: '\\images\\sidebar\\account.svg',
+    text: 'Phụ xe',
+  },
+  {
     key: 'vehicle-seat',
     to: '/vehicle-seat',
     icon: '\\images\\sidebar\\account.svg',
     text: 'Xe & Ghế xe',
-  },
-  {
-    key: 'route',
-    to: '/route',
-    icon: '\\images\\sidebar\\account.svg',
-    text: 'Tuyến xe',
   },
   {
     key: 'route-schedule',

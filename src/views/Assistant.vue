@@ -1,6 +1,311 @@
 <template>
-  <ComingSoon />
+  <div class="container-shadow bg-white p-4 rounded-lg">
+    <h2 class="text-primary fw-bold mb-4">Quản lý thông tin phụ xe</h2>
+    <button class="btn btn-success mb-3" @click="openModal(null)">
+      <i class="fas fa-plus"></i> Thêm phụ xe
+    </button>
+
+    <table class="table table-striped table-bordered table-hover">
+      <thead>
+        <tr>
+          <th class="title-table" v-for="(label, column) in columns" :key="column">{{ label }}</th>
+          <th class="title-table">Hành động</th>
+        </tr>
+        <tr>
+          <th v-for="(label, column) in columns" :key="column + '-filter'">
+            <input
+              type="text"
+              class="form-control form-control-sm"
+              :placeholder="`Lọc ${label}`"
+              v-model="filters[column]"
+            />
+          </th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="assistant in filteredAssistants" :key="assistant.assistantId">
+          <td v-for="(label, column) in columns" :key="column">
+            {{ formatColumnValue(getNestedValue(assistant, column), column) }}
+          </td>
+          <td>
+            <button class="btn btn-warning btn-sm me-2" @click="openModal(assistant)">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn btn-danger btn-sm" @click="handleDelete(assistant.assistantId)">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <CustomModal v-model="showModal" :title="currentAssistant ? 'Chỉnh sửa trợ lý' : 'Thêm trợ lý'">
+      <form @submit.prevent="handleSubmit">
+        <!-- User Information Section -->
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Họ và Tên<span class="text-danger">*</span></label>
+            <input type="text" class="form-control" v-model="form.user.fullName" required />
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Số điện thoại<span class="text-danger">*</span></label>
+            <input type="tel" class="form-control" v-model="form.user.phoneNumber" required />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-control" v-model="form.user.email" />
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Giới tính</label>
+            <select class="form-control" v-model="form.user.gender">
+              <option value="male">Nam</option>
+              <option value="female">Nữ</option>
+              <option value="other">Khác</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Địa chỉ</label>
+            <input type="text" class="form-control" v-model="form.user.address" />
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Ngày sinh</label>
+            <input
+              type="date"
+              class="form-control"
+              v-model="form.user.dateOfBirth"
+              :max="getMaxBirthDate()"
+            />
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Trạng thái trợ lý</label>
+            <select class="form-control" v-model="form.assistantStatus">
+              <option value="available">Có sẵn</option>
+              <option value="on trip">Đang trong chuyến</option>
+              <option value="off duty">Nghỉ làm</option>
+            </select>
+          </div>
+        </div>
+      </form>
+
+      <template #footer>
+        <button class="btn btn-secondary me-2" @click="closeModal">Hủy</button>
+        <button class="btn btn-primary" @click="handleSubmit">
+          {{ currentAssistant ? 'Lưu thay đổi' : 'Thêm trợ lý' }}
+        </button>
+      </template>
+    </CustomModal>
+  </div>
 </template>
+
 <script setup>
-import ComingSoon from '@/components/ComingSoon.vue'
+import { ref, onMounted, computed } from 'vue'
+import {
+  getAllAssistants,
+  createAssistant,
+  updateAssistant,
+  deleteAssistant,
+} from '../services/assistantService'
+import CustomModal from '../components/Modal.vue' // Import the custom modal component
+
+// Reactive state
+const assistants = ref([])
+const showModal = ref(false)
+const currentAssistant = ref(null)
+const filters = ref({})
+
+// Columns definition
+const columns = {
+  assistantId: 'ID Trợ lý',
+  'user.userId': 'ID Người dùng',
+  'user.fullName': 'Tên đầy đủ',
+  'user.phoneNumber': 'Số điện thoại',
+  'user.email': 'Email',
+  'user.gender': 'Giới tính',
+  'user.address': 'Địa chỉ',
+  'user.dateOfBirth': 'Ngày sinh',
+  assistantStatus: 'Trạng thái trợ lý',
+}
+
+const getMaxBirthDate = () => {
+  const today = new Date()
+  const minAge = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate())
+  return minAge.toISOString().split('T')[0]
+}
+
+// Initial form state
+const form = ref({
+  user: {
+    userId: null,
+    fullName: '',
+    phoneNumber: '',
+    email: '',
+    gender: 'male',
+    address: '',
+    dateOfBirth: '',
+    userRole: 'assistant',
+  },
+  assistantStatus: 'available',
+  assistantId: null,
+})
+
+// Utility function to format column values
+const formatColumnValue = (value, column) => {
+  // Handle date formatting
+  if (
+    column.includes('createdAt') ||
+    column.includes('updatedAt') ||
+    column === 'user.dateOfBirth'
+  ) {
+    return value ? new Date(value).toLocaleDateString('vi-VN') : ''
+  }
+
+  // Handle gender formatting
+  if (column === 'user.gender') {
+    const genderMap = {
+      male: 'Nam',
+      female: 'Nữ',
+      other: 'Khác',
+    }
+    return genderMap[value] || value
+  }
+
+  // Handle assistant status formatting
+  if (column === 'assistantStatus') {
+    const statusMap = {
+      available: 'Có sẵn',
+      'on trip': 'Đang trong chuyến',
+      'off duty': 'Nghỉ làm',
+    }
+    return statusMap[value] || value
+  }
+
+  return value || ''
+}
+
+// Computed filtered assistants
+const filteredAssistants = computed(() => {
+  return assistants.value.filter((assistant) => {
+    return Object.entries(filters.value).every(([key, value]) => {
+      if (!value) return true
+      const assistantValue = getNestedValue(assistant, key)
+      return assistantValue.toString().toLowerCase().includes(value.toLowerCase())
+    })
+  })
+})
+
+// Fetch assistants
+const fetchAssistants = async () => {
+  try {
+    assistants.value = await getAllAssistants()
+  } catch (error) {
+    console.error('Error fetching assistants:', error)
+  }
+}
+
+// Utility function to get nested object values
+const getNestedValue = (obj, path) => {
+  return path.split('.').reduce((o, key) => o?.[key], obj) || ''
+}
+
+// Modal methods
+const openModal = (assistant = null) => {
+  currentAssistant.value = assistant
+  form.value = assistant
+    ? {
+        user: { ...assistant.user },
+        assistantStatus: assistant.assistantStatus,
+        assistantId: assistant.assistantId,
+      }
+    : {
+        user: {
+          fullName: '',
+          phoneNumber: '',
+          email: '',
+          gender: 'male',
+          address: '',
+          dateOfBirth: '',
+          userRole: 'assistant',
+        },
+        assistantStatus: 'available',
+        assistantId: null,
+      }
+  showModal.value = true
+}
+
+const closeModal = () => {
+  showModal.value = false
+  currentAssistant.value = null
+  form.value = {
+    user: {
+      fullName: '',
+      phoneNumber: '',
+      email: '',
+      gender: 'male',
+      address: '',
+      dateOfBirth: '',
+      userRole: 'assistant',
+    },
+    assistantStatus: 'available',
+    assistantId: null,
+  }
+}
+
+// Submit handler
+const handleSubmit = async () => {
+  try {
+    const assistantData = {
+      user: {
+        ...form.value.user,
+        userId: currentAssistant.value?.user?.userId, // Use existing user ID if updating
+        userRole: 'assistant', // Explicitly set user role
+      },
+      assistantStatus: form.value.assistantStatus,
+      assistantId: currentAssistant.value?.assistantId,
+    }
+
+    if (currentAssistant.value) {
+      await updateAssistant(currentAssistant.value.assistantId, assistantData)
+    } else {
+      await createAssistant(assistantData)
+    }
+
+    // Fetch updated assistants and close modal in one step
+    await fetchAssistants()
+    closeModal()
+  } catch (error) {
+    console.error('Error saving assistant:', error)
+    // Optional: Add user-friendly error handling
+    alert('Phải nhập đủ thông tin cần thiết!')
+  }
+}
+
+// Delete handler
+const handleDelete = async (assistantId) => {
+  try {
+    await deleteAssistant(assistantId)
+    await fetchAssistants()
+  } catch (error) {
+    console.error('Error deleting assistant:', error)
+  }
+}
+
+// Fetch assistants on component mount
+onMounted(fetchAssistants)
 </script>
+
+<style scoped>
+.title-table {
+  background-color: #83c3ff;
+  color: white;
+}
+</style>

@@ -21,7 +21,6 @@ const router = createRouter({
     { path: '/driver', name: 'Driver', component: Driver },
     { path: '/assistant', name: 'Assistant', component: Assistant },
     { path: '/vehicle', name: 'Vehicle', component: Vehicle },
-    { path: '/vehicle-seat', name: 'VehicleSeat', component: VehicleSeat },
     { path: '/route', name: 'Route', component: Route },
     { path: '/route-schedule', name: 'RouteSchedule', component: RouteSchedule },
     { path: '/trip', name: 'Trip', component: Trip },
