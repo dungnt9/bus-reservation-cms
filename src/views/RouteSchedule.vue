@@ -50,14 +50,14 @@
       v-model="showModal"
       :title="currentRouteSchedule ? 'Chỉnh sửa lịch trình' : 'Thêm lịch trình mới'"
     >
-      <form @submit.prevent="handleSubmit">
+      <form @submit.prevent="handleSubmit" novalidate>
         <div class="row">
           <div class="col-md-6 mb-3">
             <label class="form-label">Tuyến xe<span class="text-danger">*</span></label>
             <select
               class="form-control"
               v-model="form.routeId"
-              required
+              :class="{ 'is-invalid': validationErrors.routeId }"
             >
               <option value="" disabled>Chọn tuyến xe</option>
               <option
@@ -68,15 +68,26 @@
                 {{ route.routeName }} ({{ route.distance }}km)
               </option>
             </select>
+            <div class="invalid-feedback" v-if="validationErrors.routeId">
+              {{ validationErrors.routeId }}
+            </div>
           </div>
           <div class="col-md-6 mb-3">
             <label class="form-label">Giờ khởi hành<span class="text-danger">*</span></label>
-            <input type="time" class="form-control" v-model="form.departureTime" required />
+            <input
+              type="time"
+              class="form-control"
+              v-model="form.departureTime"
+              :class="{ 'is-invalid': validationErrors.departureTime }"
+            />
+            <div class="invalid-feedback" v-if="validationErrors.departureTime">
+              {{ validationErrors.departureTime }}
+            </div>
           </div>
         </div>
 
         <div class="mb-3">
-          <label class="form-label">Ngày trong tuần</label>
+          <label class="form-label">Ngày trong tuần<span class="text-danger">*</span></label>
           <div class="row">
             <div class="col" v-for="day in daysOfWeek" :key="day">
               <div class="form-check">
@@ -86,12 +97,16 @@
                   :id="day"
                   :value="day"
                   v-model="form.daysOfWeek"
+                  :class="{ 'is-invalid': validationErrors.daysOfWeek }"
                 />
                 <label class="form-check-label" :for="day">
                   {{ formatDayName(day) }}
                 </label>
               </div>
             </div>
+          </div>
+          <div class="invalid-feedback d-block" v-if="validationErrors.daysOfWeek">
+            {{ validationErrors.daysOfWeek }}
           </div>
         </div>
       </form>
@@ -108,12 +123,7 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import {
-  getAllRouteSchedules,
-  createRouteSchedule,
-  updateRouteSchedule,
-  deleteRouteSchedule
-} from '../services/routeScheduleService'
+import { getAllRouteSchedules, createRouteSchedule, updateRouteSchedule, deleteRouteSchedule } from '../services/routeScheduleService'
 import { getAllRoutes } from '../services/routeService'
 import CustomModal from '../components/Modal.vue'
 
@@ -123,6 +133,7 @@ const routes = ref([])
 const showModal = ref(false)
 const currentRouteSchedule = ref(null)
 const filters = ref({})
+const validationErrors = ref({})
 
 // Days of week
 const daysOfWeek = [
@@ -132,7 +143,6 @@ const daysOfWeek = [
 // Columns definition
 const columns = {
   scheduleId: 'ID Lịch trình',
-  routeId: 'ID Tuyến xe',
   routeName: 'Tên tuyến xe',
   departureTime: 'Giờ khởi hành',
   daysOfWeek: 'Các ngày trong tuần'
@@ -140,8 +150,7 @@ const columns = {
 
 // Initial form state
 const form = ref({
-  scheduleId: null,
-  routeId: null,
+  routeId: '',
   departureTime: '',
   daysOfWeek: []
 })
@@ -160,15 +169,42 @@ const formatDayName = (day) => {
   return dayNames[day] || day
 }
 
-// Utility function to format column values
+const validateForm = () => {
+  validationErrors.value = {}
+  let isValid = true
+
+  if (!form.value.routeId) {
+    validationErrors.value.routeId = 'Vui lòng chọn tuyến xe'
+    isValid = false
+  }
+
+  if (!form.value.departureTime) {
+    validationErrors.value.departureTime = 'Vui lòng chọn giờ khởi hành'
+    isValid = false
+  }
+
+  if (!form.value.daysOfWeek || form.value.daysOfWeek.length === 0) {
+    validationErrors.value.daysOfWeek = 'Vui lòng chọn ít nhất một ngày trong tuần'
+    isValid = false
+  }
+
+  return isValid
+}
+
 const formatColumnValue = (value, column) => {
   if (column === 'daysOfWeek' && Array.isArray(value)) {
     return value.map(formatDayName).join(', ')
   }
+
+  if (column === 'departureTime') {
+    return value ? value.substring(0, 5) : '' // Remove seconds when displaying
+  }
+
   if (column === 'routeName') {
     const route = routes.value.find(r => r.routeId === value)
     return route ? route.routeName : value
   }
+
   return value || ''
 }
 
@@ -178,59 +214,65 @@ const filteredRouteSchedules = computed(() => {
     return Object.entries(filters.value).every(([key, value]) => {
       if (!value) return true
       const scheduleValue = getNestedValue(schedule, key)
-      return scheduleValue.toString().toLowerCase().includes(value.toLowerCase())
+      return String(scheduleValue).toLowerCase().includes(value.toLowerCase())
     })
   })
 })
-
-// Fetch route schedules
-const fetchRouteSchedules = async () => {
-  try {
-    routeSchedules.value = await getAllRouteSchedules()
-  } catch (error) {
-    console.error('Error fetching route schedules:', error)
-  }
-}
-
-// Fetch routes
-const fetchRoutes = async () => {
-  try {
-    routes.value = await getAllRoutes()
-  } catch (error) {
-    console.error('Error fetching routes:', error)
-  }
-}
 
 // Utility function to get nested object values
 const getNestedValue = (obj, path) => {
   return path.split('.').reduce((o, key) => o?.[key], obj) || ''
 }
 
+// Fetch route schedules
+const fetchRouteSchedules = async () => {
+  try {
+    const response = await getAllRouteSchedules()
+    routeSchedules.value = response
+  } catch (error) {
+    console.error('Error fetching route schedules:', error)
+    alert('Có lỗi xảy ra khi tải dữ liệu lịch trình!')
+  }
+}
+
+// Fetch routes
+const fetchRoutes = async () => {
+  try {
+    const response = await getAllRoutes()
+    routes.value = response
+  } catch (error) {
+    console.error('Error fetching routes:', error)
+    alert('Có lỗi xảy ra khi tải dữ liệu tuyến xe!')
+  }
+}
+
 // Modal methods
 const openModal = (schedule = null) => {
   currentRouteSchedule.value = schedule
-  form.value = schedule
-    ? {
-      scheduleId: schedule.scheduleId,
+  validationErrors.value = {}
+
+  if (schedule) {
+    form.value = {
       routeId: schedule.routeId,
-      departureTime: schedule.departureTime,
-      daysOfWeek: schedule.daysOfWeek
+      departureTime: schedule.departureTime.substring(0, 5), // Remove seconds
+      daysOfWeek: schedule.daysOfWeek || []
     }
-    : {
-      scheduleId: null,
-      routeId: null,
+  } else {
+    form.value = {
+      routeId: '',
       departureTime: '',
       daysOfWeek: []
     }
+  }
   showModal.value = true
 }
 
 const closeModal = () => {
   showModal.value = false
   currentRouteSchedule.value = null
+  validationErrors.value = {}
   form.value = {
-    scheduleId: null,
-    routeId: null,
+    routeId: '',
     departureTime: '',
     daysOfWeek: []
   }
@@ -238,43 +280,53 @@ const closeModal = () => {
 
 // Submit handler
 const handleSubmit = async () => {
-  // Validate required fields
-  if (!form.value.routeId || !form.value.departureTime) {
-    alert('Vui lòng nhập đủ thông tin cần thiết!')
-    return
-  }
-
   try {
-    const routeScheduleData = {
-      ...form.value,
-      route: { routeId: form.value.routeId } // Ensure route is an object with routeId
+    if (!validateForm()) {
+      return
+    }
+
+    const scheduleData = {
+      route: {
+        routeId: parseInt(form.value.routeId)
+      },
+      departureTime: form.value.departureTime + ':00',
+      daysOfWeek: [...form.value.daysOfWeek]
     }
 
     if (currentRouteSchedule.value) {
-      await updateRouteSchedule(currentRouteSchedule.value.scheduleId, routeScheduleData)
+      await updateRouteSchedule(currentRouteSchedule.value.scheduleId, scheduleData)
+      alert('Cập nhật lịch trình thành công!')
     } else {
-      await createRouteSchedule(routeScheduleData)
+      await createRouteSchedule(scheduleData)
+      alert('Thêm lịch trình thành công!')
     }
 
     await fetchRouteSchedules()
     closeModal()
   } catch (error) {
     console.error('Error saving route schedule:', error)
-    alert('Có lỗi xảy ra khi lưu lịch trình!')
+    if (error.response?.data?.message) {
+      alert(`Lỗi: ${error.response.data.message}`)
+    } else {
+      alert('Có lỗi xảy ra khi lưu lịch trình!')
+    }
   }
 }
 
 // Delete handler
 const handleDelete = async (scheduleId) => {
-  try {
-    await deleteRouteSchedule(scheduleId)
-    await fetchRouteSchedules()
-  } catch (error) {
-    console.error('Error deleting route schedule:', error)
+  if (confirm('Bạn có chắc chắn muốn xóa lịch trình này?')) {
+    try {
+      await deleteRouteSchedule(scheduleId)
+      await fetchRouteSchedules()
+    } catch (error) {
+      console.error('Error deleting route schedule:', error)
+      alert('Có lỗi xảy ra khi xóa lịch trình!')
+    }
   }
 }
 
-// Fetch route schedules and routes on component mount
+// Fetch data on component mount
 onMounted(() => {
   fetchRouteSchedules()
   fetchRoutes()
@@ -295,5 +347,9 @@ onMounted(() => {
 
 .action {
   width: 90px;
+}
+
+.form-check-input.is-invalid ~ .form-check-label {
+  color: #dc3545;
 }
 </style>
