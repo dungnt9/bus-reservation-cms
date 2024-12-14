@@ -1,5 +1,5 @@
 <template>
-  <div class="border bg-white p-4 rounded-lg">
+  <div class="bg-white p-4 rounded-lg border">
     <h2 class="text-primary fw-bold mb-4">Quản lý thông tin khách hàng</h2>
     <button
       class="btn btn-success mb-3"
@@ -11,38 +11,38 @@
 
     <table class="table table-striped table-bordered table-hover">
       <thead>
-        <tr>
-          <th class="title-table text-center" v-for="(label, column) in columns" :key="column">
-            {{ label }}
-          </th>
-          <th class="title-table text-center">Hành động</th>
-        </tr>
-        <tr>
-          <th v-for="(label, column) in columns" :key="column + '-filter'">
-            <input
-              type="text"
-              class="form-control form-control-sm"
-              :placeholder="`Lọc ${label}`"
-              v-model="filters[column]"
-            />
-          </th>
-          <th></th>
-        </tr>
+      <tr>
+        <th class="title-table text-center" v-for="(label, column) in columns" :key="column">
+          {{ label }}
+        </th>
+        <th class="title-table text-center action">Hành động</th>
+      </tr>
+      <tr>
+        <th v-for="(label, column) in columns" :key="column + '-filter'">
+          <input
+            type="text"
+            class="form-control form-control-sm"
+            :placeholder="`Lọc ${label}`"
+            v-model="filters[column]"
+          />
+        </th>
+        <th></th>
+      </tr>
       </thead>
       <tbody>
-        <tr v-for="customer in filteredCustomers" :key="customer.customerId">
-          <td v-for="(label, column) in columns" :key="column" class="text-center">
-            {{ formatColumnValue(getNestedValue(customer, column), column) }}
-          </td>
-          <td class="action">
-            <button class="btn btn-warning btn-sm me-2" @click="openModal(customer)">
-              <i class="fas fa-edit"></i>
-            </button>
-            <button class="btn btn-danger btn-sm" @click="handleDelete(customer.customerId)">
-              <i class="fas fa-trash-alt"></i>
-            </button>
-          </td>
-        </tr>
+      <tr v-for="customer in filteredCustomers" :key="customer.customerId">
+        <td v-for="(label, column) in columns" :key="column" class="text-center">
+          {{ formatColumnValue(customer[column], column) }}
+        </td>
+        <td class="action">
+          <button class="btn btn-warning btn-sm me-2" @click="openModal(customer)">
+            <i class="fas fa-edit"></i>
+          </button>
+          <button class="btn btn-danger btn-sm" @click="handleDelete(customer.customerId)">
+            <i class="fas fa-trash-alt"></i>
+          </button>
+        </td>
+      </tr>
       </tbody>
     </table>
 
@@ -50,23 +50,46 @@
       v-model="showModal"
       :title="currentCustomer ? 'Chỉnh sửa khách hàng' : 'Thêm khách hàng'"
     >
-      <form @submit.prevent="handleSubmit">
-        <!-- User Information Section -->
+      <form @submit.prevent="handleSubmit" novalidate>
         <div class="row">
           <div class="col-md-6 mb-3">
             <label class="form-label">Họ và Tên<span class="text-danger">*</span></label>
-            <input type="text" class="form-control" v-model="form.user.fullName" required />
+            <input
+              type="text"
+              class="form-control"
+              v-model="form.user.fullName"
+              :class="{ 'is-invalid': validationErrors.fullName }"
+            />
+            <div class="invalid-feedback" v-if="validationErrors.fullName">
+              {{ validationErrors.fullName }}
+            </div>
           </div>
           <div class="col-md-6 mb-3">
             <label class="form-label">Số điện thoại<span class="text-danger">*</span></label>
-            <input type="tel" class="form-control" v-model="form.user.phoneNumber" required />
+            <input
+              type="tel"
+              class="form-control"
+              v-model="form.user.phoneNumber"
+              :class="{ 'is-invalid': validationErrors.phoneNumber }"
+            />
+            <div class="invalid-feedback" v-if="validationErrors.phoneNumber">
+              {{ validationErrors.phoneNumber }}
+            </div>
           </div>
         </div>
 
         <div class="row">
           <div class="col-md-6 mb-3">
             <label class="form-label">Email</label>
-            <input type="email" class="form-control" v-model="form.user.email" />
+            <input
+              type="email"
+              class="form-control"
+              v-model="form.user.email"
+              :class="{ 'is-invalid': validationErrors.email }"
+            />
+            <div class="invalid-feedback" v-if="validationErrors.email">
+              {{ validationErrors.email }}
+            </div>
           </div>
           <div class="col-md-6 mb-3">
             <label class="form-label">Giới tính</label>
@@ -81,7 +104,15 @@
         <div class="row">
           <div class="col-md-6 mb-3">
             <label class="form-label">Địa chỉ</label>
-            <input type="text" class="form-control" v-model="form.user.address" />
+            <input
+              type="text"
+              class="form-control"
+              v-model="form.user.address"
+              :class="{ 'is-invalid': validationErrors.address }"
+            />
+            <div class="invalid-feedback" v-if="validationErrors.address">
+              {{ validationErrors.address }}
+            </div>
           </div>
           <div class="col-md-6 mb-3">
             <label class="form-label">Ngày sinh</label>
@@ -107,34 +138,69 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import {
-  getAllCustomers,
-  createCustomer,
-  updateCustomer,
-  deleteCustomer,
-} from '../services/customerService'
+import { getAllCustomers, createCustomer, updateCustomer, deleteCustomer } from '../services/customerService'
 import CustomModal from '../components/Modal.vue'
-
-// Rest of the script remains the same as in the original code
-// The main changes are in the template and removing inline editing methods
+import { validEmail, validPhone, validName, validAddress } from '../utils/validators'
 
 // Reactive state
 const customers = ref([])
 const showModal = ref(false)
 const currentCustomer = ref(null)
 const filters = ref({})
+const validationErrors = ref({})
 
-// Columns definition
+// Columns definition - Keeping it flat for display purposes
 const columns = {
   customerId: 'ID Khách hàng',
-  'user.userId': 'ID Người dùng',
-  'user.fullName': 'Tên đầy đủ',
-  'user.phoneNumber': 'Số điện thoại',
-  'user.email': 'Email',
-  'user.password_hash': 'Password',
-  'user.gender': 'Giới tính',
-  'user.address': 'Địa chỉ',
-  'user.dateOfBirth': 'Ngày sinh',
+  userId: 'ID Người dùng',
+  fullName: 'Tên đầy đủ',
+  phoneNumber: 'Số điện thoại',
+  email: 'Email',
+  password_hash: 'Password',
+  gender: 'Giới tính',
+  address: 'Địa chỉ',
+  dateOfBirth: 'Ngày sinh',
+}
+
+// Initial form state - Using nested structure for backend
+const form = ref({
+  user: {
+    fullName: '',
+    phoneNumber: '',
+    email: '',
+    password_hash: '',
+    gender: 'male',
+    address: '',
+    dateOfBirth: '',
+    userRole: 'customer'
+  }
+})
+
+const validateForm = () => {
+  validationErrors.value = {}
+  let isValid = true
+
+  if (!validName(form.value.user.fullName)) {
+    validationErrors.value.fullName = 'Họ tên phải từ 2-100 ký tự và không chứa ký tự đặc biệt'
+    isValid = false
+  }
+
+  if (!validPhone(form.value.user.phoneNumber)) {
+    validationErrors.value.phoneNumber = 'Số điện thoại phải có đúng 10 chữ số'
+    isValid = false
+  }
+
+  if (form.value.user.email && !validEmail(form.value.user.email)) {
+    validationErrors.value.email = 'Email không hợp lệ'
+    isValid = false
+  }
+
+  if (form.value.user.address && !validAddress(form.value.user.address)) {
+    validationErrors.value.address = 'Địa chỉ không được chứa emoji và tối đa 255 ký tự'
+    isValid = false
+  }
+
+  return isValid
 }
 
 const getMaxBirthDate = () => {
@@ -143,33 +209,13 @@ const getMaxBirthDate = () => {
   return minAge.toISOString().split('T')[0]
 }
 
-// Initial form state
-const form = ref({
-  user: {
-    userId: null,
-    fullName: '',
-    phoneNumber: '',
-    email: '',
-    password_hash: '',
-    gender: 'male',
-    address: '',
-    dateOfBirth: '',
-    userRole: 'customer',
-  },
-  customerId: null,
-})
-
-// Utility function to format column values
+// Format column values
 const formatColumnValue = (value, column) => {
-  if (
-    column.includes('createdAt') ||
-    column.includes('updatedAt') ||
-    column === 'user.dateOfBirth'
-  ) {
+  if (column === 'dateOfBirth') {
     return value ? new Date(value).toLocaleDateString('vi-VN') : ''
   }
 
-  if (column === 'user.gender') {
+  if (column === 'gender') {
     const genderMap = {
       male: 'Nam',
       female: 'Nữ',
@@ -186,8 +232,8 @@ const filteredCustomers = computed(() => {
   return customers.value.filter((customer) => {
     return Object.entries(filters.value).every(([key, value]) => {
       if (!value) return true
-      const customerValue = getNestedValue(customer, key)
-      return customerValue.toString().toLowerCase().includes(value.toLowerCase())
+      const customerValue = customer[key]
+      return customerValue?.toString().toLowerCase().includes(value.toLowerCase())
     })
   })
 })
@@ -195,44 +241,52 @@ const filteredCustomers = computed(() => {
 // Fetch customers
 const fetchCustomers = async () => {
   try {
-    customers.value = await getAllCustomers()
+    const response = await getAllCustomers()
+    customers.value = response
   } catch (error) {
     console.error('Error fetching customers:', error)
   }
 }
 
-// Utility function to get nested object values
-const getNestedValue = (obj, path) => {
-  return path.split('.').reduce((o, key) => o?.[key], obj) || ''
-}
-
 // Modal methods
 const openModal = (customer = null) => {
   currentCustomer.value = customer
-  form.value = customer
-    ? {
-        user: { ...customer.user },
-        customerId: customer.customerId,
+  validationErrors.value = {}
+
+  if (customer) {
+    form.value = {
+      user: {
+        fullName: customer.fullName,
+        phoneNumber: customer.phoneNumber,
+        email: customer.email,
+        password_hash: customer.password_hash,
+        gender: customer.gender,
+        address: customer.address,
+        dateOfBirth: customer.dateOfBirth,
+        userRole: 'customer'
       }
-    : {
-        user: {
-          fullName: '',
-          phoneNumber: '',
-          email: '',
-          password_hash: '',
-          gender: 'male',
-          address: '',
-          dateOfBirth: '',
-          userRole: 'customer',
-        },
-        customerId: null,
+    }
+  } else {
+    form.value = {
+      user: {
+        fullName: '',
+        phoneNumber: '',
+        email: '',
+        password_hash: '',
+        gender: 'male',
+        address: '',
+        dateOfBirth: '',
+        userRole: 'customer'
       }
+    }
+  }
   showModal.value = true
 }
 
 const closeModal = () => {
   showModal.value = false
   currentCustomer.value = null
+  validationErrors.value = {}
   form.value = {
     user: {
       fullName: '',
@@ -242,21 +296,22 @@ const closeModal = () => {
       gender: 'male',
       address: '',
       dateOfBirth: '',
-      userRole: 'customer',
-    },
-    customerId: null,
+      userRole: 'customer'
+    }
   }
 }
 
 // Submit handler
 const handleSubmit = async () => {
   try {
+    if (!validateForm()) {
+      return
+    }
+
     const customerData = {
       user: {
-        ...form.value.user,
-        userId: currentCustomer.value?.user?.userId, // Use existing user ID if updating
-        userRole: 'customer', // Explicitly set user role
-      },
+        ...form.value.user
+      }
     }
 
     if (currentCustomer.value) {
@@ -265,23 +320,24 @@ const handleSubmit = async () => {
       await createCustomer(customerData)
     }
 
-    // Fetch updated customers and close modal in one step
     await fetchCustomers()
     closeModal()
   } catch (error) {
     console.error('Error saving customer:', error)
-    // Optional: Add user-friendly error handling
-    alert('Phải nhập đủ thông tin cần thiết!')
+    alert('Có lỗi xảy ra khi lưu thông tin!')
   }
 }
 
 // Delete handler
 const handleDelete = async (customerId) => {
-  try {
-    await deleteCustomer(customerId)
-    await fetchCustomers()
-  } catch (error) {
-    console.error('Error deleting customer:', error)
+  if (confirm('Bạn có chắc chắn muốn xóa khách hàng này?')) {
+    try {
+      await deleteCustomer(customerId)
+      await fetchCustomers()
+    } catch (error) {
+      console.error('Error deleting customer:', error)
+      alert('Có lỗi xảy ra khi xóa khách hàng!')
+    }
   }
 }
 
@@ -295,10 +351,12 @@ onMounted(fetchCustomers)
   margin: 30px;
   box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.1);
 }
+
 .title-table {
   background-color: #83c3ff;
   color: white;
 }
+
 .action {
   width: 90px;
 }

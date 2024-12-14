@@ -11,38 +11,38 @@
 
     <table class="table table-striped table-bordered table-hover">
       <thead>
-        <tr>
-          <th class="title-table text-center" v-for="(label, column) in columns" :key="column">
-            {{ label }}
-          </th>
-          <th class="title-table text-center action">Hành động</th>
-        </tr>
-        <tr>
-          <th v-for="(label, column) in columns" :key="column + '-filter'">
-            <input
-              type="text"
-              class="form-control form-control-sm"
-              :placeholder="`Lọc ${label}`"
-              v-model="filters[column]"
-            />
-          </th>
-          <th></th>
-        </tr>
+      <tr>
+        <th class="title-table text-center" v-for="(label, column) in columns" :key="column">
+          {{ label }}
+        </th>
+        <th class="title-table text-center action">Hành động</th>
+      </tr>
+      <tr>
+        <th v-for="(label, column) in columns" :key="column + '-filter'">
+          <input
+            type="text"
+            class="form-control form-control-sm"
+            :placeholder="`Lọc ${label}`"
+            v-model="filters[column]"
+          />
+        </th>
+        <th></th>
+      </tr>
       </thead>
       <tbody>
-        <tr v-for="admin in filteredAdmins" :key="admin.adminId">
-          <td v-for="(label, column) in columns" :key="column" class="text-center">
-            {{ formatColumnValue(getNestedValue(admin, column), column) }}
-          </td>
-          <td class="action">
-            <button class="btn btn-warning btn-sm me-2" @click="openModal(admin)">
-              <i class="fas fa-edit"></i>
-            </button>
-            <button class="btn btn-danger btn-sm" @click="handleDelete(admin.adminId)">
-              <i class="fas fa-trash-alt"></i>
-            </button>
-          </td>
-        </tr>
+      <tr v-for="admin in filteredAdmins" :key="admin.adminId">
+        <td v-for="(label, column) in columns" :key="column" class="text-center">
+          {{ formatColumnValue(admin[column], column) }}
+        </td>
+        <td class="action">
+          <button class="btn btn-warning btn-sm me-2" @click="openModal(admin)">
+            <i class="fas fa-edit"></i>
+          </button>
+          <button class="btn btn-danger btn-sm" @click="handleDelete(admin.adminId)">
+            <i class="fas fa-trash-alt"></i>
+          </button>
+        </td>
+      </tr>
       </tbody>
     </table>
 
@@ -50,27 +50,50 @@
       v-model="showModal"
       :title="currentAdmin ? 'Chỉnh sửa quản trị viên' : 'Thêm quản trị viên'"
     >
-      <form @submit.prevent="handleSubmit">
-        <!-- User Information Section -->
+      <form @submit.prevent="handleSubmit" novalidate>
         <div class="row">
           <div class="col-md-6 mb-3">
             <label class="form-label">Họ và Tên<span class="text-danger">*</span></label>
-            <input type="text" class="form-control" v-model="form.user.fullName" required />
+            <input
+              type="text"
+              class="form-control"
+              v-model="form.fullName"
+              :class="{ 'is-invalid': validationErrors.fullName }"
+            />
+            <div class="invalid-feedback" v-if="validationErrors.fullName">
+              {{ validationErrors.fullName }}
+            </div>
           </div>
           <div class="col-md-6 mb-3">
             <label class="form-label">Số điện thoại<span class="text-danger">*</span></label>
-            <input type="tel" class="form-control" v-model="form.user.phoneNumber" required />
+            <input
+              type="tel"
+              class="form-control"
+              v-model="form.phoneNumber"
+              :class="{ 'is-invalid': validationErrors.phoneNumber }"
+            />
+            <div class="invalid-feedback" v-if="validationErrors.phoneNumber">
+              {{ validationErrors.phoneNumber }}
+            </div>
           </div>
         </div>
 
         <div class="row">
           <div class="col-md-6 mb-3">
             <label class="form-label">Email</label>
-            <input type="email" class="form-control" v-model="form.user.email" />
+            <input
+              type="email"
+              class="form-control"
+              v-model="form.email"
+              :class="{ 'is-invalid': validationErrors.email }"
+            />
+            <div class="invalid-feedback" v-if="validationErrors.email">
+              {{ validationErrors.email }}
+            </div>
           </div>
           <div class="col-md-6 mb-3">
             <label class="form-label">Giới tính</label>
-            <select class="form-control" v-model="form.user.gender">
+            <select class="form-control" v-model="form.gender">
               <option value="male">Nam</option>
               <option value="female">Nữ</option>
               <option value="other">Khác</option>
@@ -81,14 +104,22 @@
         <div class="row">
           <div class="col-md-6 mb-3">
             <label class="form-label">Địa chỉ</label>
-            <input type="text" class="form-control" v-model="form.user.address" />
+            <input
+              type="text"
+              class="form-control"
+              v-model="form.address"
+              :class="{ 'is-invalid': validationErrors.address }"
+            />
+            <div class="invalid-feedback" v-if="validationErrors.address">
+              {{ validationErrors.address }}
+            </div>
           </div>
           <div class="col-md-6 mb-3">
             <label class="form-label">Ngày sinh</label>
             <input
               type="date"
               class="form-control"
-              v-model="form.user.dateOfBirth"
+              v-model="form.dateOfBirth"
               :max="getMaxBirthDate()"
             />
           </div>
@@ -109,24 +140,65 @@
 import { ref, onMounted, computed } from 'vue'
 import { getAllAdmins, createAdmin, updateAdmin, deleteAdmin } from '../services/adminService'
 import CustomModal from '../components/Modal.vue'
+import { validEmail, validPhone, validName, validAddress } from '../utils/validators'
 
 // Reactive state
 const admins = ref([])
 const showModal = ref(false)
 const currentAdmin = ref(null)
 const filters = ref({})
+const validationErrors = ref({})
 
-// Columns definition
+// Columns definition - Updated to match the new API structure
 const columns = {
   adminId: 'ID Quản trị viên',
-  'user.userId': 'ID Người dùng',
-  'user.fullName': 'Tên đầy đủ',
-  'user.phoneNumber': 'Số điện thoại',
-  'user.email': 'Email',
-  'user.password_hash': 'Password',
-  'user.gender': 'Giới tính',
-  'user.address': 'Địa chỉ',
-  'user.dateOfBirth': 'Ngày sinh',
+  userId: 'ID Người dùng',
+  fullName: 'Tên đầy đủ',
+  phoneNumber: 'Số điện thoại',
+  email: 'Email',
+  password_hash: 'Password',
+  gender: 'Giới tính',
+  address: 'Địa chỉ',
+  dateOfBirth: 'Ngày sinh',
+}
+
+// Initial form state - Updated to match the new API structure
+const form = ref({
+  fullName: '',
+  phoneNumber: '',
+  email: '',
+  password_hash: '',
+  gender: 'male',
+  address: '',
+  dateOfBirth: '',
+  userRole: 'admin',
+})
+
+const validateForm = () => {
+  validationErrors.value = {}
+  let isValid = true
+
+  if (!validName(form.value.fullName)) {
+    validationErrors.value.fullName = 'Họ tên phải từ 2-100 ký tự và không chứa ký tự đặc biệt'
+    isValid = false
+  }
+
+  if (!validPhone(form.value.phoneNumber)) {
+    validationErrors.value.phoneNumber = 'Số điện thoại phải có đúng 10 chữ số'
+    isValid = false
+  }
+
+  if (form.value.email && !validEmail(form.value.email)) {
+    validationErrors.value.email = 'Email không hợp lệ'
+    isValid = false
+  }
+
+  if (form.value.address && !validAddress(form.value.address)) {
+    validationErrors.value.address = 'Địa chỉ không được chứa emoji và tối đa 255 ký tự'
+    isValid = false
+  }
+
+  return isValid
 }
 
 const getMaxBirthDate = () => {
@@ -135,33 +207,13 @@ const getMaxBirthDate = () => {
   return minAge.toISOString().split('T')[0]
 }
 
-// Initial form state
-const form = ref({
-  user: {
-    userId: null,
-    fullName: '',
-    phoneNumber: '',
-    email: '',
-    password_hash: '',
-    gender: 'male',
-    address: '',
-    dateOfBirth: '',
-    userRole: 'admin',
-  },
-  adminId: null,
-})
-
-// Utility function to format column values
+// Format column values
 const formatColumnValue = (value, column) => {
-  if (
-    column.includes('createdAt') ||
-    column.includes('updatedAt') ||
-    column === 'user.dateOfBirth'
-  ) {
+  if (column === 'dateOfBirth') {
     return value ? new Date(value).toLocaleDateString('vi-VN') : ''
   }
 
-  if (column === 'user.gender') {
+  if (column === 'gender') {
     const genderMap = {
       male: 'Nam',
       female: 'Nữ',
@@ -173,13 +225,13 @@ const formatColumnValue = (value, column) => {
   return value || ''
 }
 
-// Computed filtered admins
+// Computed filtered admins - Updated to work with flat structure
 const filteredAdmins = computed(() => {
   return admins.value.filter((admin) => {
     return Object.entries(filters.value).every(([key, value]) => {
       if (!value) return true
-      const adminValue = getNestedValue(admin, key)
-      return adminValue.toString().toLowerCase().includes(value.toLowerCase())
+      const adminValue = admin[key]
+      return adminValue?.toString().toLowerCase().includes(value.toLowerCase())
     })
   })
 })
@@ -187,46 +239,22 @@ const filteredAdmins = computed(() => {
 // Fetch admins
 const fetchAdmins = async () => {
   try {
-    admins.value = await getAllAdmins()
+    const response = await getAllAdmins()
+    admins.value = response
   } catch (error) {
     console.error('Error fetching admins:', error)
   }
 }
 
-// Utility function to get nested object values
-const getNestedValue = (obj, path) => {
-  return path.split('.').reduce((o, key) => o?.[key], obj) || ''
-}
-
 // Modal methods
 const openModal = (admin = null) => {
   currentAdmin.value = admin
-  form.value = admin
-    ? {
-        user: { ...admin.user },
-        adminId: admin.adminId,
-      }
-    : {
-        user: {
-          fullName: '',
-          phoneNumber: '',
-          email: '',
-          password_hash: '',
-          gender: 'male',
-          address: '',
-          dateOfBirth: '',
-          userRole: 'admin',
-        },
-        adminId: null,
-      }
-  showModal.value = true
-}
+  validationErrors.value = {}
 
-const closeModal = () => {
-  showModal.value = false
-  currentAdmin.value = null
-  form.value = {
-    user: {
+  if (admin) {
+    form.value = { ...admin }
+  } else {
+    form.value = {
       fullName: '',
       phoneNumber: '',
       email: '',
@@ -235,20 +263,45 @@ const closeModal = () => {
       address: '',
       dateOfBirth: '',
       userRole: 'admin',
-    },
-    adminId: null,
+    }
+  }
+  showModal.value = true
+}
+
+const closeModal = () => {
+  showModal.value = false
+  currentAdmin.value = null
+  validationErrors.value = {}
+  form.value = {
+    fullName: '',
+    phoneNumber: '',
+    email: '',
+    password_hash: '',
+    gender: 'male',
+    address: '',
+    dateOfBirth: '',
+    userRole: 'admin',
   }
 }
 
 // Submit handler
 const handleSubmit = async () => {
   try {
+    if (!validateForm()) {
+      return
+    }
+
     const adminData = {
       user: {
-        ...form.value.user,
-        userId: currentAdmin.value?.user?.userId, // Use existing user ID if updating
-        userRole: 'admin', // Explicitly set user role
-      },
+        fullName: form.value.fullName,
+        phoneNumber: form.value.phoneNumber,
+        email: form.value.email,
+        password_hash: form.value.password_hash,
+        gender: form.value.gender,
+        address: form.value.address,
+        dateOfBirth: form.value.dateOfBirth,
+        userRole: 'admin'
+      }
     }
 
     if (currentAdmin.value) {
@@ -257,23 +310,24 @@ const handleSubmit = async () => {
       await createAdmin(adminData)
     }
 
-    // Fetch updated admins and close modal in one step
     await fetchAdmins()
     closeModal()
   } catch (error) {
     console.error('Error saving admin:', error)
-    // Optional: Add user-friendly error handling
-    alert('Phải nhập đủ thông tin cần thiết!')
+    alert('Có lỗi xảy ra khi lưu thông tin!')
   }
 }
 
 // Delete handler
 const handleDelete = async (adminId) => {
-  try {
-    await deleteAdmin(adminId)
-    await fetchAdmins()
-  } catch (error) {
-    console.error('Error deleting admin:', error)
+  if (confirm('Bạn có chắc chắn muốn xóa quản trị viên này?')) {
+    try {
+      await deleteAdmin(adminId)
+      await fetchAdmins()
+    } catch (error) {
+      console.error('Error deleting admin:', error)
+      alert('Có lỗi xảy ra khi xóa quản trị viên!')
+    }
   }
 }
 
@@ -287,10 +341,12 @@ onMounted(fetchAdmins)
   margin: 30px;
   box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.1);
 }
+
 .title-table {
   background-color: #83c3ff;
   color: white;
 }
+
 .action {
   width: 90px;
 }
