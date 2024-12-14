@@ -1,5 +1,5 @@
 <template>
-  <div class="border bg-white p-4 rounded-lg">
+  <div class="bg-white p-4 rounded-lg border">
     <h2 class="text-primary fw-bold mb-4">Quản lý Phương tiện</h2>
     <button
       class="btn btn-success mb-3"
@@ -11,38 +11,38 @@
 
     <table class="table table-striped table-bordered table-hover">
       <thead>
-        <tr>
-          <th class="title-table text-center" v-for="(label, column) in columns" :key="column">
-            {{ label }}
-          </th>
-          <th class="title-table text-center action">Hành động</th>
-        </tr>
-        <tr>
-          <th v-for="(label, column) in columns" :key="column + '-filter'">
-            <input
-              type="text"
-              class="form-control form-control-sm"
-              :placeholder="`Lọc ${label}`"
-              v-model="filters[column]"
-            />
-          </th>
-          <th></th>
-        </tr>
+      <tr>
+        <th class="title-table text-center" v-for="(label, column) in columns" :key="column">
+          {{ label }}
+        </th>
+        <th class="title-table text-center action">Hành động</th>
+      </tr>
+      <tr>
+        <th v-for="(label, column) in columns" :key="column + '-filter'">
+          <input
+            type="text"
+            class="form-control form-control-sm"
+            :placeholder="`Lọc ${label}`"
+            v-model="filters[column]"
+          />
+        </th>
+        <th></th>
+      </tr>
       </thead>
       <tbody>
-        <tr v-for="vehicle in filteredVehicles" :key="vehicle.vehicleId">
-          <td v-for="(label, column) in columns" :key="column" class="text-center">
-            {{ formatColumnValue(vehicle[column], column) }}
-          </td>
-          <td class="action">
-            <button class="btn btn-warning btn-sm me-2" @click="openModal(vehicle)">
-              <i class="fas fa-edit"></i>
-            </button>
-            <button class="btn btn-danger btn-sm" @click="handleDelete(vehicle.vehicleId)">
-              <i class="fas fa-trash-alt"></i>
-            </button>
-          </td>
-        </tr>
+      <tr v-for="vehicle in filteredVehicles" :key="vehicle.vehicleId">
+        <td v-for="(label, column) in columns" :key="column" class="text-center">
+          {{ formatColumnValue(vehicle[column], column) }}
+        </td>
+        <td class="action">
+          <button class="btn btn-warning btn-sm me-2" @click="openModal(vehicle)">
+            <i class="fas fa-edit"></i>
+          </button>
+          <button class="btn btn-danger btn-sm" @click="handleDelete(vehicle.vehicleId)">
+            <i class="fas fa-trash-alt"></i>
+          </button>
+        </td>
+      </tr>
       </tbody>
     </table>
 
@@ -50,11 +50,19 @@
       v-model="showModal"
       :title="currentVehicle ? 'Chỉnh sửa phương tiện' : 'Thêm phương tiện'"
     >
-      <form @submit.prevent="handleSubmit">
+      <form @submit.prevent="handleSubmit" novalidate>
         <div class="row">
           <div class="col-md-6 mb-3">
             <label class="form-label">Biển số xe<span class="text-danger">*</span></label>
-            <input type="text" class="form-control" v-model="form.plateNumber" required />
+            <input
+              type="text"
+              class="form-control"
+              v-model="form.plateNumber"
+              :class="{ 'is-invalid': validationErrors.plateNumber }"
+            />
+            <div class="invalid-feedback" v-if="validationErrors.plateNumber">
+              {{ validationErrors.plateNumber }}
+            </div>
           </div>
           <div class="col-md-6 mb-3">
             <label class="form-label">Số chỗ ngồi<span class="text-danger">*</span></label>
@@ -62,20 +70,30 @@
               type="number"
               class="form-control"
               v-model="form.seatCapacity"
-              required
+              :class="{ 'is-invalid': validationErrors.seatCapacity }"
               min="1"
             />
+            <div class="invalid-feedback" v-if="validationErrors.seatCapacity">
+              {{ validationErrors.seatCapacity }}
+            </div>
           </div>
         </div>
 
         <div class="row">
           <div class="col-md-6 mb-3">
             <label class="form-label">Trạng thái<span class="text-danger">*</span></label>
-            <select class="form-control" v-model="form.vehicleStatus" required>
+            <select
+              class="form-control"
+              v-model="form.vehicleStatus"
+              :class="{ 'is-invalid': validationErrors.vehicleStatus }"
+            >
               <option value="active">Hoạt động</option>
               <option value="maintenance">Bảo dưỡng</option>
               <option value="retired">Ngừng hoạt động</option>
             </select>
+            <div class="invalid-feedback" v-if="validationErrors.vehicleStatus">
+              {{ validationErrors.vehicleStatus }}
+            </div>
           </div>
         </div>
       </form>
@@ -92,12 +110,7 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import {
-  getAllVehicles,
-  createVehicle,
-  updateVehicle,
-  deleteVehicle,
-} from '../services/vehicleService'
+import { getAllVehicles, createVehicle, updateVehicle, deleteVehicle } from '../services/vehicleService'
 import CustomModal from '../components/Modal.vue'
 
 // Reactive state
@@ -105,30 +118,58 @@ const vehicles = ref([])
 const showModal = ref(false)
 const currentVehicle = ref(null)
 const filters = ref({})
+const validationErrors = ref({})
 
 // Columns definition
 const columns = {
   vehicleId: 'ID Phương tiện',
   plateNumber: 'Biển số xe',
   seatCapacity: 'Số chỗ ngồi',
-  vehicleStatus: 'Trạng thái',
+  vehicleStatus: 'Trạng thái'
 }
 
 // Initial form state
 const form = ref({
   plateNumber: '',
   seatCapacity: null,
-  vehicleStatus: 'active',
+  vehicleStatus: 'active'
 })
 
-// Utility function to format column values
+const validateForm = () => {
+  validationErrors.value = {}
+  let isValid = true
+
+  if (!form.value.plateNumber.trim()) {
+    validationErrors.value.plateNumber = 'Biển số xe không được để trống'
+    isValid = false
+  } else if (!/^[0-9A-Z-]{5,10}$/i.test(form.value.plateNumber.trim())) {
+    validationErrors.value.plateNumber = 'Biển số xe không hợp lệ'
+    isValid = false
+  }
+
+  if (!form.value.seatCapacity) {
+    validationErrors.value.seatCapacity = 'Số chỗ ngồi không được để trống'
+    isValid = false
+  } else if (form.value.seatCapacity < 1) {
+    validationErrors.value.seatCapacity = 'Số chỗ ngồi phải lớn hơn 0'
+    isValid = false
+  }
+
+  if (!form.value.vehicleStatus) {
+    validationErrors.value.vehicleStatus = 'Trạng thái không được để trống'
+    isValid = false
+  }
+
+  return isValid
+}
+
+// Format column values
 const formatColumnValue = (value, column) => {
-  // Handle vehicle status
   if (column === 'vehicleStatus') {
     const statusMap = {
       active: 'Hoạt động',
       maintenance: 'Bảo dưỡng',
-      retired: 'Ngừng hoạt động',
+      retired: 'Ngừng hoạt động'
     }
     return statusMap[value] || value
   }
@@ -142,7 +183,7 @@ const filteredVehicles = computed(() => {
     return Object.entries(filters.value).every(([key, value]) => {
       if (!value) return true
       const vehicleValue = vehicle[key]
-      return vehicleValue.toString().toLowerCase().includes(value.toLowerCase())
+      return vehicleValue?.toString().toLowerCase().includes(value.toLowerCase())
     })
   })
 })
@@ -150,7 +191,8 @@ const filteredVehicles = computed(() => {
 // Fetch vehicles
 const fetchVehicles = async () => {
   try {
-    vehicles.value = await getAllVehicles()
+    const response = await getAllVehicles()
+    vehicles.value = response
   } catch (error) {
     console.error('Error fetching vehicles:', error)
   }
@@ -159,34 +201,47 @@ const fetchVehicles = async () => {
 // Modal methods
 const openModal = (vehicle = null) => {
   currentVehicle.value = vehicle
-  form.value = vehicle
-    ? {
-        plateNumber: vehicle.plateNumber,
-        seatCapacity: vehicle.seatCapacity,
-        vehicleStatus: vehicle.vehicleStatus,
-      }
-    : {
-        plateNumber: '',
-        seatCapacity: null,
-        vehicleStatus: 'active',
-      }
+  validationErrors.value = {}
+
+  if (vehicle) {
+    form.value = {
+      plateNumber: vehicle.plateNumber,
+      seatCapacity: vehicle.seatCapacity,
+      vehicleStatus: vehicle.vehicleStatus
+    }
+  } else {
+    form.value = {
+      plateNumber: '',
+      seatCapacity: null,
+      vehicleStatus: 'active'
+    }
+  }
   showModal.value = true
 }
 
 const closeModal = () => {
   showModal.value = false
   currentVehicle.value = null
+  validationErrors.value = {}
   form.value = {
     plateNumber: '',
     seatCapacity: null,
-    vehicleStatus: 'active',
+    vehicleStatus: 'active'
   }
 }
 
 // Submit handler
 const handleSubmit = async () => {
   try {
-    const vehicleData = { ...form.value }
+    if (!validateForm()) {
+      return
+    }
+
+    const vehicleData = {
+      plateNumber: form.value.plateNumber.trim(),
+      seatCapacity: parseInt(form.value.seatCapacity),
+      vehicleStatus: form.value.vehicleStatus
+    }
 
     if (currentVehicle.value) {
       await updateVehicle(currentVehicle.value.vehicleId, vehicleData)
@@ -194,22 +249,24 @@ const handleSubmit = async () => {
       await createVehicle(vehicleData)
     }
 
-    // Fetch updated vehicles and close modal in one step
     await fetchVehicles()
     closeModal()
   } catch (error) {
     console.error('Error saving vehicle:', error)
-    alert('Phải nhập đủ thông tin cần thiết!')
+    alert('Có lỗi xảy ra khi lưu thông tin!')
   }
 }
 
 // Delete handler
 const handleDelete = async (vehicleId) => {
-  try {
-    await deleteVehicle(vehicleId)
-    await fetchVehicles()
-  } catch (error) {
-    console.error('Error deleting vehicle:', error)
+  if (confirm('Bạn có chắc chắn muốn xóa phương tiện này?')) {
+    try {
+      await deleteVehicle(vehicleId)
+      await fetchVehicles()
+    } catch (error) {
+      console.error('Error deleting vehicle:', error)
+      alert('Có lỗi xảy ra khi xóa phương tiện!')
+    }
   }
 }
 
@@ -223,10 +280,12 @@ onMounted(fetchVehicles)
   margin: 30px;
   box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.1);
 }
+
 .title-table {
   background-color: #83c3ff;
   color: white;
 }
+
 .action {
   width: 90px;
 }
