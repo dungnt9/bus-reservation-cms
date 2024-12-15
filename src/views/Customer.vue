@@ -1,3 +1,4 @@
+<!-- src/views/Customer.vue -->
 <template>
   <div class="bg-white p-4 rounded-lg border">
     <h2 class="text-primary fw-bold mb-4">Quản lý thông tin khách hàng</h2>
@@ -35,6 +36,9 @@
           {{ formatColumnValue(customer[column], column) }}
         </td>
         <td class="action">
+          <button class="btn btn-success btn-sm me-2" @click="openInvoiceModal(customer)">
+            <i class="fas fa-file-invoice"></i>
+          </button>
           <button class="btn btn-warning btn-sm me-2" @click="openModal(customer)">
             <i class="fas fa-edit"></i>
           </button>
@@ -46,6 +50,7 @@
       </tbody>
     </table>
 
+    <!-- Customer Modal -->
     <CustomModal
       v-model="showModal"
       :title="currentCustomer ? 'Chỉnh sửa khách hàng' : 'Thêm khách hàng'"
@@ -133,36 +138,129 @@
         </button>
       </template>
     </CustomModal>
+
+    <!-- Invoice Modal -->
+    <CustomModal
+      v-model="showInvoiceModal"
+      title="Tạo hóa đơn"
+    >
+      <form @submit.prevent="handleInvoiceSubmit" novalidate>
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label class="form-label">Khách hàng</label>
+            <input
+              type="text"
+              class="form-control"
+              :value="selectedCustomerInfo"
+              disabled
+            />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Chuyến xe<span class="text-danger">*</span></label>
+            <select
+              class="form-control"
+              v-model="invoiceForm.tripId"
+              @change="handleTripChange"
+            >
+              <option value="">Chọn chuyến xe</option>
+              <option v-for="trip in availableTrips" :key="trip.tripId" :value="trip.tripId">
+                {{ formatTripOption(trip) }}
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-md-12">
+            <label class="form-label">Ghế được chọn</label>
+            <input
+              type="text"
+              class="form-control"
+              :value="selectedSeatsDisplay"
+              disabled
+            />
+          </div>
+        </div>
+
+        <Seat
+          v-if="showSeatSelection"
+          v-model="invoiceForm.selectedSeats"
+          :booked-seats="bookedSeats"
+          @update:modelValue="handleSeatChange"
+        />
+
+        <div class="row mt-3">
+          <div class="col-md-4">
+            <label class="form-label">Tổng tiền</label>
+            <input
+              type="text"
+              class="form-control"
+              :value="formatCurrency(invoiceForm.totalPrice)"
+              disabled
+            />
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Trạng thái thanh toán</label>
+            <select class="form-control" v-model="invoiceForm.paymentStatus">
+              <option value="pending">Chờ thanh toán</option>
+              <option value="paid">Đã thanh toán</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Phương thức thanh toán</label>
+            <select class="form-control" v-model="invoiceForm.paymentMethod">
+              <option value="cash">Tiền mặt</option>
+              <option value="card">Thẻ</option>
+            </select>
+          </div>
+        </div>
+      </form>
+
+      <template #footer>
+        <button class="btn btn-secondary me-2" @click="closeInvoiceModal">Hủy</button>
+        <button class="btn btn-primary" @click="handleInvoiceSubmit">Tạo hóa đơn</button>
+      </template>
+    </CustomModal>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
-import { getAllCustomers, createCustomer, updateCustomer, deleteCustomer } from '../services/customerService'
+import { ref, computed, onMounted } from 'vue'
 import CustomModal from '../components/Modal.vue'
+import Seat from '../components/Seat.vue'
+import { createCustomer, getAllCustomers, updateCustomer, deleteCustomer } from '../services/customerService'
+import { createInvoice, getAvailableTrips, getTripSeats } from '../services/invoiceService'
 import { validEmail, validPhone, validName, validAddress } from '../utils/validators'
 
-// Reactive state
+// Reactive state for customers
 const customers = ref([])
 const showModal = ref(false)
 const currentCustomer = ref(null)
 const filters = ref({})
 const validationErrors = ref({})
 
-// Columns definition - Keeping it flat for display purposes
+// Reactive state for invoice creation
+const showInvoiceModal = ref(false)
+const selectedCustomer = ref(null)
+const availableTrips = ref([])
+const bookedSeats = ref([])
+const showSeatSelection = ref(false)
+const tripDetails = ref(null)
+const ticketPrice = ref(0);
+
+// Columns definition
 const columns = {
   customerId: 'ID Khách hàng',
   userId: 'ID Người dùng',
   fullName: 'Tên đầy đủ',
   phoneNumber: 'Số điện thoại',
   email: 'Email',
-  password_hash: 'Password',
   gender: 'Giới tính',
   address: 'Địa chỉ',
   dateOfBirth: 'Ngày sinh',
 }
 
-// Initial form state - Using nested structure for backend
+// Form states
 const form = ref({
   user: {
     fullName: '',
@@ -175,6 +273,69 @@ const form = ref({
     userRole: 'customer'
   }
 })
+
+const invoiceForm = ref({
+  tripId: '',
+  selectedSeats: [],
+  totalPrice: 0,
+  paymentStatus: 'pending',
+  paymentMethod: 'card'
+})
+
+// Computed properties
+const filteredCustomers = computed(() => {
+  return customers.value.filter((customer) => {
+    return Object.entries(filters.value).every(([key, value]) => {
+      if (!value) return true
+      const customerValue = customer[key]?.toString().toLowerCase()
+      return customerValue?.includes(value.toLowerCase())
+    })
+  })
+})
+
+const selectedCustomerInfo = computed(() => {
+  if (!selectedCustomer.value) return ''
+  return `${selectedCustomer.value.fullName} - ${selectedCustomer.value.phoneNumber}`
+})
+
+const selectedSeatsDisplay = computed(() => {
+  return invoiceForm.value.selectedSeats.length > 0
+    ? invoiceForm.value.selectedSeats.join(', ')
+    : 'Chưa chọn ghế'
+})
+
+// Methods
+const formatColumnValue = (value, column) => {
+  if (column === 'dateOfBirth') {
+    return value ? new Date(value).toLocaleDateString('vi-VN') : ''
+  }
+  if (column === 'gender') {
+    const genderMap = {
+      male: 'Nam',
+      female: 'Nữ',
+      other: 'Khác',
+    }
+    return genderMap[value] || value
+  }
+  return value || ''
+}
+
+const formatCurrency = (value) => {
+  return new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND'
+  }).format(value)
+}
+
+const formatTripOption = (trip) => {
+  return `${trip.routeName} - ${new Date(trip.scheduledDeparture).toLocaleString('vi-VN')}`
+}
+
+const getMaxBirthDate = () => {
+  const today = new Date()
+  const minAge = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate())
+  return minAge.toISOString().split('T')[0]
+}
 
 const validateForm = () => {
   validationErrors.value = {}
@@ -203,52 +364,17 @@ const validateForm = () => {
   return isValid
 }
 
-const getMaxBirthDate = () => {
-  const today = new Date()
-  const minAge = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate())
-  return minAge.toISOString().split('T')[0]
-}
-
-// Format column values
-const formatColumnValue = (value, column) => {
-  if (column === 'dateOfBirth') {
-    return value ? new Date(value).toLocaleDateString('vi-VN') : ''
-  }
-
-  if (column === 'gender') {
-    const genderMap = {
-      male: 'Nam',
-      female: 'Nữ',
-      other: 'Khác',
-    }
-    return genderMap[value] || value
-  }
-
-  return value || ''
-}
-
-// Computed filtered customers
-const filteredCustomers = computed(() => {
-  return customers.value.filter((customer) => {
-    return Object.entries(filters.value).every(([key, value]) => {
-      if (!value) return true
-      const customerValue = customer[key]
-      return customerValue?.toString().toLowerCase().includes(value.toLowerCase())
-    })
-  })
-})
-
-// Fetch customers
+// Customer CRUD methods
 const fetchCustomers = async () => {
   try {
     const response = await getAllCustomers()
     customers.value = response
   } catch (error) {
     console.error('Error fetching customers:', error)
+    alert('Có lỗi xảy ra khi tải danh sách khách hàng!')
   }
 }
 
-// Modal methods
 const openModal = (customer = null) => {
   currentCustomer.value = customer
   validationErrors.value = {}
@@ -287,21 +413,8 @@ const closeModal = () => {
   showModal.value = false
   currentCustomer.value = null
   validationErrors.value = {}
-  form.value = {
-    user: {
-      fullName: '',
-      phoneNumber: '',
-      email: '',
-      password_hash: '',
-      gender: 'male',
-      address: '',
-      dateOfBirth: '',
-      userRole: 'customer'
-    }
-  }
 }
 
-// Submit handler
 const handleSubmit = async () => {
   try {
     if (!validateForm()) {
@@ -327,8 +440,6 @@ const handleSubmit = async () => {
     alert('Có lỗi xảy ra khi lưu thông tin!')
   }
 }
-
-// Delete handler
 const handleDelete = async (customerId) => {
   if (confirm('Bạn có chắc chắn muốn xóa khách hàng này?')) {
     try {
@@ -341,8 +452,120 @@ const handleDelete = async (customerId) => {
   }
 }
 
-// Fetch customers on component mount
-onMounted(fetchCustomers)
+// Invoice creation methods
+const openInvoiceModal = async (customer) => {
+  console.log('Opening invoice modal for customer:', customer)
+  selectedCustomer.value = customer
+  showInvoiceModal.value = true
+  invoiceForm.value = {
+    tripId: '',
+    selectedSeats: [],
+    totalPrice: 0,
+    paymentStatus: 'pending',
+    paymentMethod: 'card'
+  }
+
+  try {
+    const trips = await getAvailableTrips()
+    console.log('Available trips:', trips)
+    availableTrips.value = trips
+  } catch (error) {
+    console.error('Error fetching available trips:', error)
+    alert('Có lỗi xảy ra khi tải danh sách chuyến xe!')
+  }
+}
+
+const closeInvoiceModal = () => {
+  showInvoiceModal.value = false
+  selectedCustomer.value = null
+  invoiceForm.value = {
+    tripId: '',
+    selectedSeats: [],
+    totalPrice: 0,
+    paymentStatus: 'pending',
+    paymentMethod: 'card'
+  }
+  showSeatSelection.value = false
+  bookedSeats.value = []
+  tripDetails.value = null
+}
+
+const handleTripChange = async () => {
+  console.log('Selected trip ID:', invoiceForm.value.tripId)
+  if (!invoiceForm.value.tripId) {
+    showSeatSelection.value = false;
+    return;
+  }
+
+  try {
+    const response = await getTripSeats(invoiceForm.value.tripId);
+    console.log('Trip details:', response);
+    tripDetails.value = response;
+
+    // Lấy giá vé từ response
+    if (response.ticketPrice) {
+      ticketPrice.value = response.ticketPrice;
+    }
+
+    bookedSeats.value = response.tripSeats
+      .filter(seat => seat.status === 'booked')
+      .map(seat => parseInt(seat.seatNumber));
+
+    showSeatSelection.value = true;
+    // Reset selected seats when changing trips
+    invoiceForm.value.selectedSeats = [];
+    invoiceForm.value.totalPrice = 0;
+  } catch (error) {
+    console.error('Error fetching trip seats:', error);
+    alert('Có lỗi xảy ra khi tải thông tin ghế!');
+  }
+};
+
+const handleSeatChange = () => {
+  if (!ticketPrice.value) {
+    console.error('No ticket price available');
+    return;
+  }
+
+  invoiceForm.value.totalPrice = invoiceForm.value.selectedSeats.length * ticketPrice.value;
+  console.log('Updated total price:', invoiceForm.value.totalPrice);
+};
+
+const handleInvoiceSubmit = async () => {
+  console.log('Submitting invoice form:', invoiceForm.value)
+  if (!invoiceForm.value.tripId) {
+    alert('Vui lòng chọn chuyến xe!')
+    return
+  }
+
+  if (invoiceForm.value.selectedSeats.length === 0) {
+    alert('Vui lòng chọn ít nhất một ghế!')
+    return
+  }
+
+  try {
+    const invoiceData = {
+      customerId: selectedCustomer.value.customerId,
+      tripId: invoiceForm.value.tripId,
+      selectedSeats: invoiceForm.value.selectedSeats,
+      paymentStatus: invoiceForm.value.paymentStatus,
+      paymentMethod: invoiceForm.value.paymentMethod
+    }
+
+    await createInvoice(invoiceData)
+    closeInvoiceModal()
+    alert('Tạo hóa đơn thành công!')
+  } catch (error) {
+    console.error('Error creating invoice:', error)
+    alert('Có lỗi xảy ra khi tạo hóa đơn!')
+  }
+}
+
+// Lifecycle hooks
+onMounted(() => {
+  console.log('Customer component mounted')
+  fetchCustomers()
+})
 </script>
 
 <style scoped>
@@ -358,6 +581,6 @@ onMounted(fetchCustomers)
 }
 
 .action {
-  width: 90px;
+  width: 120px;
 }
 </style>

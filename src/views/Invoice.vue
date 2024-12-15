@@ -1,13 +1,6 @@
 <template>
-  <div class="border bg-white p-4 rounded-lg">
+  <div class="bg-white p-4 rounded-lg border">
     <h2 class="text-primary fw-bold mb-4">Quản lý hóa đơn</h2>
-    <button
-      class="btn btn-success mb-3"
-      @click="openModal(null)"
-      style="background-color: white; color: green"
-    >
-      <i class="fas fa-plus"></i> Thêm hóa đơn
-    </button>
 
     <table class="table table-striped table-bordered table-hover">
       <thead>
@@ -32,10 +25,10 @@
       <tbody>
       <tr v-for="invoice in filteredInvoices" :key="invoice.invoiceId">
         <td v-for="(label, column) in columns" :key="column" class="text-center">
-          {{ formatColumnValue(getNestedValue(invoice, column), column) }}
+          {{ formatColumnValue(invoice[column], column) }}
         </td>
         <td class="action">
-          <button class="btn btn-warning btn-sm me-2" @click="openModal(invoice)">
+          <button class="btn btn-warning btn-sm me-2" @click="openEditModal(invoice)">
             <i class="fas fa-edit"></i>
           </button>
           <button class="btn btn-danger btn-sm" @click="handleDelete(invoice.invoiceId)">
@@ -46,44 +39,92 @@
       </tbody>
     </table>
 
-    <CustomModal v-model="showModal" :title="currentInvoice ? 'Chỉnh sửa hóa đơn' : 'Thêm hóa đơn'">
-      <form @submit.prevent="handleSubmit">
-        <div class="row">
-          <div class="col-md-6 mb-3">
-            <label class="form-label">Khách hàng<span class="text-danger">*</span></label>
-            <input type="text" class="form-control" v-model="form.customer.fullName" required />
+    <!-- Edit Modal -->
+    <CustomModal v-model="showModal" :title="'Chỉnh sửa hóa đơn'">
+      <form @submit.prevent="handleSubmit" novalidate>
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label class="form-label">Mã hóa đơn</label>
+            <input
+              type="text"
+              class="form-control"
+              v-model="form.invoiceId"
+              disabled
+            />
           </div>
-          <div class="col-md-6 mb-3">
-            <label class="form-label">Số điện thoại<span class="text-danger">*</span></label>
-            <input type="tel" class="form-control" v-model="form.customer.phoneNumber" required />
+          <div class="col-md-6">
+            <label class="form-label">Mã chuyến xe</label>
+            <input
+              type="text"
+              class="form-control"
+              v-model="form.tripId"
+              disabled
+            />
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label class="form-label">Khách hàng</label>
+            <input
+              type="text"
+              class="form-control"
+              :value="form.fullName"
+              disabled
+            />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Số điện thoại</label>
+            <input
+              type="text"
+              class="form-control"
+              :value="form.phoneNumber"
+              disabled
+            />
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label class="form-label">Ghế đã đặt</label>
+            <input
+              type="text"
+              class="form-control"
+              :value="formatSelectedSeats"
+              disabled
+            />
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Tổng tiền</label>
+            <input
+              type="text"
+              class="form-control"
+              :value="formatCurrency(form.totalPrice)"
+              disabled
+            />
           </div>
         </div>
 
         <div class="row">
-          <div class="col-md-6 mb-3">
-            <label class="form-label">Tổng tiền<span class="text-danger">*</span></label>
-            <input type="number" class="form-control" v-model="form.totalPrice" required min="0" />
-          </div>
-          <div class="col-md-6 mb-3">
+          <div class="col-md-6">
             <label class="form-label">Trạng thái thanh toán</label>
-            <select class="form-control" v-model="form.paymentStatus">
+            <select
+              class="form-control"
+              v-model="form.paymentStatus"
+            >
+              <option value="pending">Chờ thanh toán</option>
               <option value="paid">Đã thanh toán</option>
-              <option value="pending">Chưa thanh toán</option>
             </select>
           </div>
-        </div>
-
-        <div class="row">
-          <div class="col-md-6 mb-3">
+          <div class="col-md-6">
             <label class="form-label">Phương thức thanh toán</label>
-            <select class="form-control" v-model="form.paymentMethod">
+            <select
+              class="form-control"
+              v-model="form.paymentMethod"
+            >
               <option value="cash">Tiền mặt</option>
               <option value="card">Thẻ</option>
             </select>
-          </div>
-          <div class="col-md-6 mb-3">
-            <label class="form-label">Ngày hóa đơn</label>
-            <input type="date" class="form-control" v-model="form.invoiceDate" />
           </div>
         </div>
       </form>
@@ -91,7 +132,7 @@
       <template #footer>
         <button class="btn btn-secondary me-2" @click="closeModal">Hủy</button>
         <button class="btn btn-primary" @click="handleSubmit">
-          {{ currentInvoice ? 'Lưu thay đổi' : 'Thêm hóa đơn' }}
+          Lưu thay đổi
         </button>
       </template>
     </CustomModal>
@@ -100,180 +141,157 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import { getAllInvoices, createInvoice, updateInvoice, deleteInvoice } from '../services/invoiceService'
 import CustomModal from '../components/Modal.vue'
+import {
+  getAllInvoices,
+  updateInvoice,
+  deleteInvoice
+} from '../services/invoiceService'
 
 // Reactive state
 const invoices = ref([])
 const showModal = ref(false)
-const currentInvoice = ref(null)
 const filters = ref({})
+
+// Form state
+const form = ref({
+  invoiceId: '',
+  tripId: '',
+  plateNumber: '',
+  customerId: '',
+  fullName: '',
+  phoneNumber: '',
+  selectedSeats: [],
+  totalPrice: 0,
+  paymentStatus: 'pending',
+  paymentMethod: 'card',
+  invoiceDate: null
+})
 
 // Columns definition
 const columns = {
-  invoiceId: 'ID Hóa đơn',
-  'customer.userId': 'ID Khách hàng',
-  'customer.fullName': 'Tên khách hàng',
-  'customer.phoneNumber': 'Số điện thoại',
+  invoiceId: 'Mã HĐ',
+  tripId: 'Mã chuyến',
+  plateNumber: 'Biển số xe',
+  customerId: 'Mã KH',
+  fullName: 'Tên KH',
+  phoneNumber: 'SĐT',
+  selectedSeats: 'Ghế đã đặt',
   totalPrice: 'Tổng tiền',
-  paymentStatus: 'Trạng thái thanh toán',
-  paymentMethod: 'Phương thức thanh toán',
-  invoiceDate: 'Ngày hóa đơn'
+  paymentStatus: 'Trạng thái',
+  paymentMethod: 'Phương thức',
+  invoiceDate: 'Ngày lập'
 }
 
-// Initial form state
-const form = ref({
-  customer: {
-    userId: null,
-    fullName: '',
-    phoneNumber: ''
-  },
-  totalPrice: null,
-  paymentStatus: 'unpaid',
-  paymentMethod: 'cash',
-  invoiceDate: new Date().toISOString().split('T')[0]
-})
-
-// Utility function to format column values
-const formatColumnValue = (value, column) => {
-  // Handle date formatting
-  if (column === 'invoiceDate') {
-    return value ? new Date(value).toLocaleDateString('vi-VN') : ''
-  }
-
-  // Handle payment status formatting
-  if (column === 'paymentStatus') {
-    const statusMap = {
-      paid: 'Đã thanh toán',
-      pending: 'Chưa thanh toán'
-    }
-    return statusMap[value] || value
-  }
-
-  // Handle payment method formatting
-  if (column === 'paymentMethod') {
-    const methodMap = {
-      cash: 'Tiền mặt',
-      card: 'Thẻ'
-    }
-    return methodMap[value] || value
-  }
-
-  // Format total price
-  if (column === 'totalPrice') {
-    return value ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value) : ''
-  }
-
-  return value || ''
-}
-
-// Computed filtered invoices
+// Computed properties
 const filteredInvoices = computed(() => {
   return invoices.value.filter((invoice) => {
     return Object.entries(filters.value).every(([key, value]) => {
       if (!value) return true
-      const invoiceValue = getNestedValue(invoice, key)
-      return invoiceValue.toString().toLowerCase().includes(value.toLowerCase())
+      const invoiceValue = invoice[key]?.toString().toLowerCase()
+      return invoiceValue?.includes(value.toLowerCase())
     })
   })
 })
 
-// Fetch invoices
-const fetchInvoices = async () => {
-  try {
-    invoices.value = await getAllInvoices()
-  } catch (error) {
-    console.error('Error fetching invoices:', error)
+const formatSelectedSeats = computed(() => {
+  return form.value.selectedSeats.join(', ')
+})
+
+// Methods
+const formatColumnValue = (value, column) => {
+  if (!value) return ''
+
+  switch (column) {
+    case 'paymentStatus':
+      return value === 'pending' ? 'Chờ thanh toán' : 'Đã thanh toán'
+    case 'paymentMethod':
+      return value === 'cash' ? 'Tiền mặt' : 'Thẻ'
+    case 'totalPrice':
+      return formatCurrency(value)
+    case 'invoiceDate':
+      return new Date(value).toLocaleString('vi-VN')
+    case 'selectedSeats':
+      return Array.isArray(value) ? value.join(', ') : value
+    default:
+      return value
   }
 }
 
-// Utility function to get nested object values
-const getNestedValue = (obj, path) => {
-  return path.split('.').reduce((o, key) => o?.[key], obj) || ''
+const formatCurrency = (value) => {
+  return new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND'
+  }).format(value)
 }
 
-// Modal methods
-const openModal = (invoice = null) => {
-  currentInvoice.value = invoice
-  form.value = invoice
-    ? {
-      customer: { ...invoice.customer },
-      totalPrice: invoice.totalPrice,
-      paymentStatus: invoice.paymentStatus,
-      paymentMethod: invoice.paymentMethod,
-      invoiceDate: invoice.invoiceDate ? new Date(invoice.invoiceDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
-    }
-    : {
-      customer: {
-        userId: null,
-        fullName: '',
-        phoneNumber: ''
-      },
-      totalPrice: null,
-      paymentStatus: 'unpaid',
-      paymentMethod: 'cash',
-      invoiceDate: new Date().toISOString().split('T')[0]
-    }
+const fetchInvoices = async () => {
+  try {
+    const response = await getAllInvoices()
+    console.log('Fetched invoices:', response)
+    invoices.value = response
+  } catch (error) {
+    console.error('Error fetching invoices:', error)
+    alert('Có lỗi xảy ra khi tải danh sách hóa đơn!')
+  }
+}
+
+const openEditModal = (invoice) => {
+  console.log('Opening edit modal for invoice:', invoice)
+  form.value = { ...invoice }
   showModal.value = true
 }
 
 const closeModal = () => {
   showModal.value = false
-  currentInvoice.value = null
   form.value = {
-    customer: {
-      userId: null,
-      fullName: '',
-      phoneNumber: ''
-    },
-    totalPrice: null,
-    paymentStatus: 'unpaid',
-    paymentMethod: 'cash',
-    invoiceDate: new Date().toISOString().split('T')[0]
+    invoiceId: '',
+    tripId: '',
+    plateNumber: '',
+    customerId: '',
+    fullName: '',
+    phoneNumber: '',
+    selectedSeats: [],
+    totalPrice: 0,
+    paymentStatus: 'pending',
+    paymentMethod: 'card',
+    invoiceDate: null
   }
 }
 
-// Submit handler
 const handleSubmit = async () => {
   try {
-    const invoiceData = {
-      customer: {
-        ...form.value.customer,
-        userId: currentInvoice.value?.customer?.userId
-      },
-      totalPrice: form.value.totalPrice,
+    console.log('Submitting updated invoice:', form.value)
+    await updateInvoice(form.value.invoiceId, {
       paymentStatus: form.value.paymentStatus,
-      paymentMethod: form.value.paymentMethod,
-      invoiceDate: form.value.invoiceDate
-    }
-
-    if (currentInvoice.value) {
-      await updateInvoice(currentInvoice.value.invoiceId, invoiceData)
-    } else {
-      await createInvoice(invoiceData)
-    }
-
-    // Fetch updated invoices and close modal in one step
+      paymentMethod: form.value.paymentMethod
+    })
     await fetchInvoices()
     closeModal()
   } catch (error) {
-    console.error('Error saving invoice:', error)
-    alert('Phải nhập đủ thông tin cần thiết!')
+    console.error('Error updating invoice:', error)
+    alert('Có lỗi xảy ra khi cập nhật hóa đơn!')
   }
 }
 
-// Delete handler
 const handleDelete = async (invoiceId) => {
-  try {
-    await deleteInvoice(invoiceId)
-    await fetchInvoices()
-  } catch (error) {
-    console.error('Error deleting invoice:', error)
+  if (confirm('Bạn có chắc chắn muốn xóa hóa đơn này?')) {
+    try {
+      console.log('Deleting invoice:', invoiceId)
+      await deleteInvoice(invoiceId)
+      await fetchInvoices()
+    } catch (error) {
+      console.error('Error deleting invoice:', error)
+      alert('Có lỗi xảy ra khi xóa hóa đơn!')
+    }
   }
 }
 
-// Fetch invoices on component mount
-onMounted(fetchInvoices)
+// Lifecycle hooks
+onMounted(() => {
+  console.log('Invoice component mounted')
+  fetchInvoices()
+})
 </script>
 
 <style scoped>
@@ -282,11 +300,17 @@ onMounted(fetchInvoices)
   margin: 30px;
   box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.1);
 }
+
 .title-table {
   background-color: #83c3ff;
   color: white;
 }
+
 .action {
   width: 90px;
+}
+
+.form-control:disabled {
+  background-color: #e9ecef;
 }
 </style>
