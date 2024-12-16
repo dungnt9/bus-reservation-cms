@@ -9,21 +9,96 @@ import Customer from '@/views/Customer.vue'
 import RouteSchedule from '@/views/RouteSchedule.vue'
 import Route from '@/views/Route.vue'
 import Vehicle from '@/views/Vehicle.vue'
+import Login from '@/views/Login.vue'
+import authService from '@/services/authService'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    { path: '/admin', name: 'Admin', component: Admin },
-    { path: '/customer', name: 'Customer', component: Customer },
-    { path: '/driver', name: 'Driver', component: Driver },
-    { path: '/assistant', name: 'Assistant', component: Assistant },
-    { path: '/vehicle', name: 'Vehicle', component: Vehicle },
-    { path: '/route', name: 'Route', component: Route },
-    { path: '/route-schedule', name: 'RouteSchedule', component: RouteSchedule },
-    { path: '/trip', name: 'Trip', component: Trip },
-    { path: '/invoice', name: 'Invoice', component: Invoice },
-    { path: '/', name: 'Report', component: Report },
+    {
+      path: '/login',
+      name: 'Login',
+      component: Login,
+      meta: { requiresAuth: false }
+    },
+    {
+      path: '/admin',
+      name: 'Admin',
+      component: Admin,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/customer',
+      name: 'Customer',
+      component: Customer,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/driver',
+      name: 'Driver',
+      component: Driver,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/assistant',
+      name: 'Assistant',
+      component: Assistant,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/vehicle',
+      name: 'Vehicle',
+      component: Vehicle,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/route',
+      name: 'Route',
+      component: Route,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/route-schedule',
+      name: 'RouteSchedule',
+      component: RouteSchedule,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/trip',
+      name: 'Trip',
+      component: Trip,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/invoice',
+      name: 'Invoice',
+      component: Invoice,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/',
+      name: 'Report',
+      component: Report,
+      meta: { requiresAuth: true }
+    },
+    // Redirect any unknown routes to login
+    {
+      path: '/:pathMatch(.*)*',
+      redirect: '/login'
+    }
   ],
+})
+
+router.beforeEach((to, from, next) => {
+  const isAuthenticated = authService.isAuthenticated()
+
+  if (to.meta.requiresAuth && !isAuthenticated) {
+    next('/login')
+  } else if (to.path === '/login' && isAuthenticated) {
+    next('/admin') // or wherever you want authenticated users to go
+  } else {
+    next()
+  }
 })
 
 export default router

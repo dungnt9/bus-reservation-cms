@@ -12,7 +12,7 @@
         </div>
         <div class="user-details" :class="{ 'show-details': isExpanded }">
           <p class="title">Admin</p>
-          <p class="name">John Doe</p>
+          <p class="name">{{ adminName }}</p>
         </div>
       </div>
 
@@ -34,7 +34,7 @@
               </router-link>
             </li>
             <li>
-              <a href="#" @click="handleLogout" class="menu-link">
+              <a href="#" @click.prevent="handleLogout" class="menu-link">
                 <div class="icon-wrapper">
                   <img class="img-li" src="\images\sidebar\account.svg" alt="" />
                 </div>
@@ -49,11 +49,15 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import authService from '@/services/authService'
 
 // State for sidebar expansion
+const router = useRouter()
 const isExpanded = ref(false)
 const activeMenu = ref('')
+const adminName = ref('')
 
 // Menu items for easier management
 const menuItems = [
@@ -126,8 +130,16 @@ const setActiveMenu = (menu) => {
 
 // Placeholder logout method
 const handleLogout = () => {
-  console.log('Logout clicked')
+  authService.logout()
+  router.push('/login')
 }
+
+onMounted(() => {
+  const currentUser = authService.getCurrentUser()
+  if (currentUser) {
+    adminName.value = currentUser.fullName
+  }
+})
 </script>
 
 <style scoped>
