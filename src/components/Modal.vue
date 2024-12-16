@@ -57,7 +57,7 @@ const closeModal = () => {
   background-color: white;
   border-radius: 8px;
   width: 90%;
-  max-width: 600px;
+  max-width: 700px;
   max-height: 90%;
   overflow-y: auto;
   transition: all 0.3s ease;

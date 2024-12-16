@@ -1,44 +1,132 @@
-// src/components/Seat.vue
 <template>
   <div class="seat-container">
-    <h5 class="text-center mb-3">Tầng 1</h5>
+    <h5 class="text-center mb-3">Sơ đồ chỗ ngồi</h5>
 
-    <div class="seat-layout">
-      <div class="driver-area mb-4">
-        <div class="position-box bg-secondary text-white">Lái Xe</div>
-        <div class="position-box bg-secondary text-white">Phụ Xe</div>
-        <div class="position-box bg-secondary text-white">Cửa</div>
+    <div class="main-grid">
+      <!-- Cột 1: Lái xe và các ghế -->
+      <button class="position-box" style="grid-column: 1; grid-row: 1;">Lái Xe</button>
+      <button v-for="seatNum in [1,5,9,13,17,21,25,29,33,37]"
+              :key="seatNum"
+              class="seat-btn"
+              :class="{
+                'selected': modelValue.includes(seatNum),
+                'booked': bookedSeats.includes(seatNum)
+              }"
+              :disabled="bookedSeats.includes(seatNum)"
+              :style="`grid-column: 1; grid-row: ${Math.floor((seatNum-1)/4) + 2}`"
+              @click="handleSeatClick(seatNum)">
+        {{ seatNum }}
+      </button>
+      <button class="seat-btn"
+              :class="{
+                'selected': modelValue.includes(41),
+                'booked': bookedSeats.includes(41)
+              }"
+              :disabled="bookedSeats.includes(41)"
+              style="grid-column: 1; grid-row: 12;"
+              @click="handleSeatClick(41)">
+        41
+      </button>
+
+      <!-- Cột 2: Các ghế -->
+      <button v-for="seatNum in [2,6,10,14,18,22,26,30,34,38]"
+              :key="seatNum"
+              class="seat-btn"
+              :class="{
+                'selected': modelValue.includes(seatNum),
+                'booked': bookedSeats.includes(seatNum)
+              }"
+              :disabled="bookedSeats.includes(seatNum)"
+              :style="`grid-column: 2; grid-row: ${Math.floor((seatNum-1)/4) + 2}`"
+              @click="handleSeatClick(seatNum)">
+        {{ seatNum }}
+      </button>
+      <button class="seat-btn"
+              :class="{
+                'selected': modelValue.includes(42),
+                'booked': bookedSeats.includes(42)
+              }"
+              :disabled="bookedSeats.includes(42)"
+              style="grid-column: 2; grid-row: 12;"
+              @click="handleSeatClick(42)">
+        42
+      </button>
+
+      <!-- Cột 3: Phụ xe và ghế 43 -->
+      <button class="position-box" style="grid-column: 3; grid-row: 1;">Phụ Xe</button>
+      <button class="seat-btn"
+              :class="{
+                'selected': modelValue.includes(43),
+                'booked': bookedSeats.includes(43)
+              }"
+              :disabled="bookedSeats.includes(43)"
+              style="grid-column: 3; grid-row: 12;"
+              @click="handleSeatClick(43)">
+        43
+      </button>
+
+      <!-- Cột 4: Các ghế -->
+      <button v-for="seatNum in [3,7,11,15,19,23,27,31,35,39]"
+              :key="seatNum"
+              class="seat-btn"
+              :class="{
+                'selected': modelValue.includes(seatNum),
+                'booked': bookedSeats.includes(seatNum)
+              }"
+              :disabled="bookedSeats.includes(seatNum)"
+              :style="`grid-column: 4; grid-row: ${Math.floor((seatNum-1)/4) + 2}`"
+              @click="handleSeatClick(seatNum)">
+        {{ seatNum }}
+      </button>
+      <button class="seat-btn"
+              :class="{
+                'selected': modelValue.includes(44),
+                'booked': bookedSeats.includes(44)
+              }"
+              :disabled="bookedSeats.includes(44)"
+              style="grid-column: 4; grid-row: 12;"
+              @click="handleSeatClick(44)">
+        44
+      </button>
+
+      <!-- Cột 5: Cửa và các ghế -->
+      <button class="position-box" style="grid-column: 5; grid-row: 1;">Cửa</button>
+      <button v-for="seatNum in [4,8,12,16,20,24,28,32,36,40]"
+              :key="seatNum"
+              class="seat-btn"
+              :class="{
+                'selected': modelValue.includes(seatNum),
+                'booked': bookedSeats.includes(seatNum)
+              }"
+              :disabled="bookedSeats.includes(seatNum)"
+              :style="`grid-column: 5; grid-row: ${Math.floor((seatNum-1)/4) + 2}`"
+              @click="handleSeatClick(seatNum)">
+        {{ seatNum }}
+      </button>
+      <button class="seat-btn"
+              :class="{
+                'selected': modelValue.includes(45),
+                'booked': bookedSeats.includes(45)
+              }"
+              :disabled="bookedSeats.includes(45)"
+              style="grid-column: 5; grid-row: 12;"
+              @click="handleSeatClick(45)">
+        45
+      </button>
+    </div>
+
+    <div class="seat-legend">
+      <div class="legend-item">
+        <div class="legend-box available"></div>
+        <span>Ghế trống</span>
       </div>
-
-      <div class="seats-grid">
-        <div v-for="i in 45" :key="i" class="seat-item">
-          <button
-            class="seat-btn"
-            :class="{
-              'selected': modelValue.includes(i),
-              'booked': bookedSeats.includes(i)
-            }"
-            :disabled="bookedSeats.includes(i)"
-            @click="toggleSeat(i)"
-          >
-            {{ i }}
-          </button>
-        </div>
+      <div class="legend-item">
+        <div class="legend-box selected"></div>
+        <span>Ghế đã chọn</span>
       </div>
-
-      <div class="seat-legend mt-4">
-        <div class="legend-item">
-          <div class="legend-box available"></div>
-          <span>Ghế trống</span>
-        </div>
-        <div class="legend-item">
-          <div class="legend-box selected"></div>
-          <span>Ghế đã chọn</span>
-        </div>
-        <div class="legend-item">
-          <div class="legend-box booked"></div>
-          <span>Ghế đã đặt</span>
-        </div>
+      <div class="legend-item">
+        <div class="legend-box booked"></div>
+        <span>Ghế đã đặt</span>
       </div>
     </div>
   </div>
@@ -48,59 +136,74 @@
 const props = defineProps({
   modelValue: {
     type: Array,
+    required: true,
     default: () => []
   },
   bookedSeats: {
     type: Array,
+    required: true,
     default: () => []
   }
 })
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'seatSelected'])
 
-const toggleSeat = (seatNumber) => {
-  let newSelected = [...props.modelValue]
-  const index = newSelected.indexOf(seatNumber)
-
-  if (index === -1) {
-    newSelected.push(seatNumber)
-  } else {
-    newSelected.splice(index, 1)
+const handleSeatClick = (seatNumber) => {
+  // Nếu ghế đã được đặt, không cho phép chọn
+  if (props.bookedSeats.includes(seatNumber)) {
+    return
   }
 
-  emit('update:modelValue', newSelected)
+  // Tạo bản sao của mảng ghế đã chọn
+  const newSelectedSeats = [...props.modelValue]
+  const seatIndex = newSelectedSeats.indexOf(seatNumber)
+
+  // Toggle trạng thái ghế
+  if (seatIndex === -1) {
+    newSelectedSeats.push(seatNumber)
+  } else {
+    newSelectedSeats.splice(seatIndex, 1)
+  }
+
+  // Emit event để cập nhật v-model
+  emit('update:modelValue', newSelectedSeats)
+
+  // Emit sự kiện riêng cho việc chọn ghế
+  emit('seatSelected', newSelectedSeats)
 }
 </script>
 
 <style scoped>
 .seat-container {
   padding: 20px;
-  background-color: #f8f9fa;
+  background-color: white;
   border-radius: 8px;
+  max-width: 800px;
+  margin: 0 auto;
 }
 
-.driver-area {
-  display: flex;
-  justify-content: space-between;
-  padding: 0 40px;
-}
-
-.position-box {
-  padding: 8px 16px;
-  border-radius: 4px;
-  text-align: center;
-}
-
-.seats-grid {
+.main-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(5, 60px);
+  gap: 10px 40px;
+  justify-content: center;
   padding: 20px;
 }
 
+.position-box {
+  padding: 8px 0;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  width: 60px;
+  height: 35px;
+}
+
 .seat-btn {
-  width: 40px;
-  height: 40px;
+  width: 60px;
+  height: 35px;
   border: 1px solid #dee2e6;
   background-color: white;
   border-radius: 4px;
@@ -109,6 +212,7 @@ const toggleSeat = (seatNumber) => {
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s;
+  font-size: 14px;
 }
 
 .seat-btn:hover:not(:disabled) {
@@ -135,8 +239,10 @@ const toggleSeat = (seatNumber) => {
 
 .seat-legend {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 20px;
+  margin-top: 20px;
+  padding: 0 20px;
 }
 
 .legend-item {
@@ -146,8 +252,8 @@ const toggleSeat = (seatNumber) => {
 }
 
 .legend-box {
-  width: 20px;
-  height: 20px;
+  width: 60px;
+  height: 35px;
   border: 1px solid #dee2e6;
   border-radius: 4px;
 }
