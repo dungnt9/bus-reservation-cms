@@ -8,7 +8,7 @@ const authService = {
   async login(phoneNumber, password) {
     try {
       // Gọi API login
-      const response = await api.post('/auth/login', {
+      const response = await api.post('/auth/admin-login', {
         phoneNumber,
         password
       })
