@@ -393,14 +393,14 @@ const validateForm = () => {
   }
 
   // Validate departure time is in the future
-  if (form.value.scheduledDeparture) {
-    const departureTime = new Date(form.value.scheduledDeparture)
-    const now = new Date()
-    if (departureTime <= now) {
-      validationErrors.value.scheduledDeparture = 'Thời gian khởi hành phải là thời gian trong tương lai'
-      isValid = false
-    }
-  }
+  // if (form.value.scheduledDeparture) {
+  //   const departureTime = new Date(form.value.scheduledDeparture)
+  //   const now = new Date()
+  //   if (departureTime <= now) {
+  //     validationErrors.value.scheduledDeparture = 'Thời gian khởi hành phải là thời gian trong tương lai'
+  //     isValid = false
+  //   }
+  // }
 
   // Validate arrival time is after departure time
   if (form.value.scheduledDeparture && form.value.scheduledArrival) {
