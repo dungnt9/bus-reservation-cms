@@ -1,4 +1,4 @@
-// src/services/authService.js
+// authService.js
 import api from './api'
 
 const TOKEN_KEY = 'admin_token'
@@ -10,7 +10,7 @@ const authService = {
       // Gọi API login
       const response = await api.post('/auth/admin-login', {
         phoneNumber,
-        password
+        password,
       })
 
       // Nếu login thành công, lưu token và thông tin user
@@ -67,7 +67,37 @@ const authService = {
       this.logout()
       return false
     }
-  }
+  },
+
+  updateProfile(userData) {
+    return api
+      .put(`/users/${userData.userId}`, userData)
+      .then((response) => {
+        // Cập nhật thông tin user trong localStorage
+        const currentUser = this.getCurrentUser()
+        const updatedUser = { ...currentUser, ...response }
+        localStorage.setItem(USER_KEY, JSON.stringify(updatedUser))
+        return response
+      })
+      .catch((error) => {
+        throw new Error(
+          'Cập nhật thông tin thất bại: ' + (error.response?.data?.message || error.message),
+        )
+      })
+  },
+
+  changePassword(userId, currentPassword, newPassword) {
+    return api
+      .post(`/users/${userId}/change-password`, {
+        currentPassword,
+        newPassword,
+      })
+      .catch((error) => {
+        throw new Error(
+          'Đổi mật khẩu thất bại: ' + (error.response?.data?.message || error.message),
+        )
+      })
+  },
 }
 
 export default authService

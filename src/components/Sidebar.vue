@@ -6,7 +6,7 @@
       @mouseenter="isExpanded = true"
       @mouseleave="isExpanded = false"
     >
-      <div class="head">
+      <router-link to="/account-settings" class="head">
         <div class="user-img">
           <img src="\images\sidebar\account.svg" alt="" />
         </div>
@@ -14,7 +14,7 @@
           <p class="title">Admin</p>
           <p class="name">{{ adminName }}</p>
         </div>
-      </div>
+      </router-link>
 
       <div class="nav">
         <div class="menu">
@@ -128,7 +128,6 @@ const setActiveMenu = (menu) => {
   activeMenu.value = menu
 }
 
-// Placeholder logout method
 const handleLogout = () => {
   authService.logout()
   router.push('/login')
@@ -185,6 +184,10 @@ onMounted(() => {
   padding-bottom: 20px;
   border-bottom: 1px solid #dbdada;
   align-items: center;
+  font-size: 14px;
+  font-weight: 500;
+  color: black;
+  text-decoration: none;
 }
 
 .user-details {
