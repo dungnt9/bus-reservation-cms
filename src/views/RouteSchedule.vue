@@ -11,38 +11,38 @@
 
     <table class="table table-striped table-bordered table-hover">
       <thead>
-      <tr>
-        <th class="title-table text-center" v-for="(label, column) in columns" :key="column">
-          {{ label }}
-        </th>
-        <th class="title-table text-center action">Hành động</th>
-      </tr>
-      <tr>
-        <th v-for="(label, column) in columns" :key="column + '-filter'">
-          <input
-            type="text"
-            class="form-control form-control-sm"
-            :placeholder="`Lọc ${label}`"
-            v-model="filters[column]"
-          />
-        </th>
-        <th></th>
-      </tr>
+        <tr>
+          <th class="title-table text-center" v-for="(label, column) in columns" :key="column">
+            {{ label }}
+          </th>
+          <th class="title-table text-center action">Hành động</th>
+        </tr>
+        <tr>
+          <th v-for="(label, column) in columns" :key="column + '-filter'">
+            <input
+              type="text"
+              class="form-control form-control-sm"
+              :placeholder="`Lọc ${label}`"
+              v-model="filters[column]"
+            />
+          </th>
+          <th></th>
+        </tr>
       </thead>
       <tbody>
-      <tr v-for="schedule in filteredRouteSchedules" :key="schedule.scheduleId">
-        <td v-for="(label, column) in columns" :key="column" class="text-center">
-          {{ formatColumnValue(getNestedValue(schedule, column), column) }}
-        </td>
-        <td class="action">
-          <button class="btn btn-warning btn-sm me-2" @click="openModal(schedule)">
-            <i class="fas fa-edit"></i>
-          </button>
-          <button class="btn btn-danger btn-sm" @click="handleDelete(schedule.scheduleId)">
-            <i class="fas fa-trash-alt"></i>
-          </button>
-        </td>
-      </tr>
+        <tr v-for="schedule in filteredRouteSchedules" :key="schedule.scheduleId">
+          <td v-for="(label, column) in columns" :key="column" class="text-center">
+            {{ formatColumnValue(getNestedValue(schedule, column), column) }}
+          </td>
+          <td class="action">
+            <button class="btn btn-warning btn-sm me-2" @click="openModal(schedule)">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn btn-danger btn-sm" @click="handleDelete(schedule.scheduleId)">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </td>
+        </tr>
       </tbody>
     </table>
 
@@ -60,11 +60,7 @@
               :class="{ 'is-invalid': validationErrors.routeId }"
             >
               <option value="" disabled>Chọn tuyến xe</option>
-              <option
-                v-for="route in routes"
-                :key="route.routeId"
-                :value="route.routeId"
-              >
+              <option v-for="route in routes" :key="route.routeId" :value="route.routeId">
                 {{ route.routeName }} ({{ route.distance }}km)
               </option>
             </select>
@@ -89,18 +85,18 @@
         <div class="mb-3">
           <label class="form-label">Ngày trong tuần<span class="text-danger">*</span></label>
           <div class="row">
-            <div class="col" v-for="day in daysOfWeek" :key="day">
+            <div class="col" v-for="day in daysOfWeek" :key="day.value">
               <div class="form-check">
                 <input
                   class="form-check-input"
                   type="checkbox"
-                  :id="day"
-                  :value="day"
+                  :id="day.value"
+                  :value="day.value"
                   v-model="form.daysOfWeek"
                   :class="{ 'is-invalid': validationErrors.daysOfWeek }"
                 />
-                <label class="form-check-label" :for="day">
-                  {{ formatDayName(day) }}
+                <label class="form-check-label" :for="day.value">
+                  {{ day.label }}
                 </label>
               </div>
             </div>
@@ -123,7 +119,12 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import { getAllRouteSchedules, createRouteSchedule, updateRouteSchedule, deleteRouteSchedule } from '../services/routeScheduleService'
+import {
+  getAllRouteSchedules,
+  createRouteSchedule,
+  updateRouteSchedule,
+  deleteRouteSchedule,
+} from '../services/routeScheduleService'
 import { getAllRoutes } from '../services/routeService'
 import CustomModal from '../components/Modal.vue'
 
@@ -137,7 +138,13 @@ const validationErrors = ref({})
 
 // Days of week
 const daysOfWeek = [
-  'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
+  { value: 'MONDAY', label: 'Thứ 2' },
+  { value: 'TUESDAY', label: 'Thứ 3' },
+  { value: 'WEDNESDAY', label: 'Thứ 4' },
+  { value: 'THURSDAY', label: 'Thứ 5' },
+  { value: 'FRIDAY', label: 'Thứ 6' },
+  { value: 'SATURDAY', label: 'Thứ 7' },
+  { value: 'SUNDAY', label: 'Chủ nhật' },
 ]
 
 // Columns definition
@@ -145,14 +152,14 @@ const columns = {
   scheduleId: 'ID Lịch trình',
   routeName: 'Tên tuyến xe',
   departureTime: 'Giờ khởi hành',
-  daysOfWeek: 'Các ngày trong tuần'
+  daysOfWeek: 'Các ngày trong tuần',
 }
 
 // Initial form state
 const form = ref({
   routeId: '',
   departureTime: '',
-  daysOfWeek: []
+  daysOfWeek: [],
 })
 
 // Format day name
@@ -164,7 +171,7 @@ const formatDayName = (day) => {
     Thursday: 'Thứ 5',
     Friday: 'Thứ 6',
     Saturday: 'Thứ 7',
-    Sunday: 'Chủ nhật'
+    Sunday: 'Chủ nhật',
   }
   return dayNames[day] || day
 }
@@ -201,7 +208,7 @@ const formatColumnValue = (value, column) => {
   }
 
   if (column === 'routeName') {
-    const route = routes.value.find(r => r.routeId === value)
+    const route = routes.value.find((r) => r.routeId === value)
     return route ? route.routeName : value
   }
 
@@ -255,13 +262,16 @@ const openModal = (schedule = null) => {
     form.value = {
       routeId: schedule.routeId,
       departureTime: schedule.departureTime.substring(0, 5), // Remove seconds
-      daysOfWeek: schedule.daysOfWeek || []
+      // Đảm bảo daysOfWeek là một mảng mới và đã được chuyển sang chữ hoa
+      daysOfWeek: Array.isArray(schedule.daysOfWeek)
+        ? schedule.daysOfWeek.map((day) => day.toUpperCase())
+        : [],
     }
   } else {
     form.value = {
       routeId: '',
       departureTime: '',
-      daysOfWeek: []
+      daysOfWeek: [],
     }
   }
   showModal.value = true
@@ -274,7 +284,7 @@ const closeModal = () => {
   form.value = {
     routeId: '',
     departureTime: '',
-    daysOfWeek: []
+    daysOfWeek: [],
   }
 }
 
@@ -287,10 +297,11 @@ const handleSubmit = async () => {
 
     const scheduleData = {
       route: {
-        routeId: parseInt(form.value.routeId)
+        routeId: parseInt(form.value.routeId),
       },
       departureTime: form.value.departureTime + ':00',
-      daysOfWeek: [...form.value.daysOfWeek]
+      // Đảm bảo daysOfWeek luôn là mảng mới và ở dạng chữ hoa
+      daysOfWeek: [...form.value.daysOfWeek].map((day) => day.toUpperCase()),
     }
 
     if (currentRouteSchedule.value) {
@@ -351,5 +362,9 @@ onMounted(() => {
 
 .form-check-input.is-invalid ~ .form-check-label {
   color: #dc3545;
+}
+
+.form-check-label {
+  font-size: 12px;
 }
 </style>
