@@ -161,6 +161,7 @@ onMounted(() => {
 }
 
 .sidebar {
+  opacity: 0.9;
   width: 92px;
   height: 100vh;
   display: flex;

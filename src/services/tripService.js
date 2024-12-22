@@ -2,7 +2,7 @@ import api from './api'
 
 export const createTrip = async (trip) => {
   try {
-    const response = await api.post('/trips', trip)  // Bỏ /api/ vì api.js đã có baseURL
+    const response = await api.post('/trips', trip) // Bỏ /api/ vì api.js đã có baseURL
     return response
   } catch (error) {
     console.error('Error creating trip:', error.response?.data?.message || error.message)
@@ -86,6 +86,26 @@ export const getAvailableVehicles = async () => {
     return response
   } catch (error) {
     console.error('Error fetching available vehicles:', error)
+    throw error
+  }
+}
+// Tài xế đang chạy
+export const getDriversForTrip = async (tripId) => {
+  try {
+    const response = await api.get(`/trips/${tripId}/drivers`)
+    return response
+  } catch (error) {
+    console.error('Error fetching drivers for trip:', error)
+    throw error
+  }
+}
+
+export const getAssistantsForTrip = async (tripId) => {
+  try {
+    const response = await api.get(`/trips/${tripId}/assistants`)
+    return response
+  } catch (error) {
+    console.error('Error fetching assistants for trip:', error)
     throw error
   }
 }

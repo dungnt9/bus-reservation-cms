@@ -81,7 +81,6 @@
               class="form-control"
               v-model="form.driverId"
               :class="{ 'is-invalid': validationErrors.driverId }"
-              :disabled="currentTrip"
             >
               <option value="">Chọn tài xế</option>
               <option v-for="driver in drivers" :key="driver.driverId" :value="driver.driverId">
@@ -101,7 +100,6 @@
               class="form-control"
               v-model="form.assistantId"
               :class="{ 'is-invalid': validationErrors.assistantId }"
-              :disabled="currentTrip"
             >
               <option value="">Chọn phụ xe</option>
               <option
@@ -152,7 +150,6 @@
               class="form-control"
               v-model="form.scheduledDeparture"
               :class="{ 'is-invalid': validationErrors.scheduledDeparture }"
-              :disabled="currentTrip"
             />
             <div class="invalid-feedback" v-if="validationErrors.scheduledDeparture">
               {{ validationErrors.scheduledDeparture }}
@@ -167,7 +164,6 @@
               class="form-control"
               v-model="form.scheduledArrival"
               :class="{ 'is-invalid': validationErrors.scheduledArrival }"
-              :disabled="currentTrip"
             />
             <div class="invalid-feedback" v-if="validationErrors.scheduledArrival">
               {{ validationErrors.scheduledArrival }}
@@ -255,6 +251,8 @@ import {
   getAvailableAssistants,
   getActiveRouteSchedules,
   getAvailableVehicles,
+  getDriversForTrip,
+  getAssistantsForTrip,
 } from '../services/tripService'
 import CustomModal from '../components/Modal.vue'
 
@@ -477,46 +475,71 @@ const fetchData = async () => {
   }
 }
 
-const openModal = (trip = null) => {
+const openModal = async (trip = null) => {
   currentTrip.value = trip
   validationErrors.value = {}
 
-  if (trip) {
-    form.value = {
-      scheduleId: trip.scheduleId,
-      driverId: trip.driverId,
-      assistantId: trip.assistantId,
-      scheduledDeparture: trip.scheduledDeparture ? trip.scheduledDeparture.slice(0, 16) : '',
-      scheduledArrival: trip.scheduledArrival ? trip.scheduledArrival.slice(0, 16) : '',
-      actualDeparture: trip.actualDeparture ? trip.actualDeparture.slice(0, 16) : '',
-      actualArrival: trip.actualArrival ? trip.actualArrival.slice(0, 16) : '',
-      tripStatus: trip.tripStatus,
-      vehiclePlateNumber: trip.vehiclePlateNumber,
-      totalSeats: trip.totalSeats,
-      availableSeats: trip.availableSeats,
-      tripSeats: trip.tripSeats.map((seat) => ({
-        ...seat,
-        status: seat.status,
-      })),
+  try {
+    if (trip) {
+      // Khi edit, lấy danh sách drivers và assistants bao gồm cả người đang chạy chuyến này
+      const [driversData, assistantsData] = await Promise.all([
+        getDriversForTrip(trip.tripId),
+        getAssistantsForTrip(trip.tripId),
+      ])
+
+      drivers.value = driversData
+      assistants.value = assistantsData
+
+      // Điền form với dữ liệu hiện có
+      form.value = {
+        scheduleId: trip.scheduleId,
+        driverId: trip.driverId,
+        assistantId: trip.assistantId,
+        scheduledDeparture: trip.scheduledDeparture ? trip.scheduledDeparture.slice(0, 16) : '',
+        scheduledArrival: trip.scheduledArrival ? trip.scheduledArrival.slice(0, 16) : '',
+        actualDeparture: trip.actualDeparture ? trip.actualDeparture.slice(0, 16) : '',
+        actualArrival: trip.actualArrival ? trip.actualArrival.slice(0, 16) : '',
+        tripStatus: trip.tripStatus,
+        vehiclePlateNumber: trip.vehiclePlateNumber,
+        totalSeats: trip.totalSeats,
+        availableSeats: trip.availableSeats,
+        tripSeats: trip.tripSeats.map((seat) => ({
+          ...seat,
+          status: seat.status,
+        })),
+      }
+    } else {
+      // Khi tạo mới, chỉ lấy available drivers và assistants
+      const [driversData, assistantsData] = await Promise.all([
+        getAvailableDrivers(),
+        getAvailableAssistants(),
+      ])
+
+      drivers.value = driversData
+      assistants.value = assistantsData
+
+      // Reset form
+      form.value = {
+        scheduleId: '',
+        driverId: '',
+        assistantId: '',
+        vehicleId: '',
+        scheduledDeparture: '',
+        scheduledArrival: '',
+        actualDeparture: '',
+        actualArrival: '',
+        tripStatus: 'in_progress',
+        vehiclePlateNumber: '',
+        totalSeats: 0,
+        availableSeats: 0,
+        tripSeats: [],
+      }
     }
-  } else {
-    form.value = {
-      scheduleId: '',
-      driverId: '',
-      assistantId: '',
-      vehicleId: '',
-      scheduledDeparture: '',
-      scheduledArrival: '',
-      actualDeparture: '',
-      actualArrival: '',
-      tripStatus: 'in_progress',
-      vehiclePlateNumber: '',
-      totalSeats: 0,
-      availableSeats: 0,
-      tripSeats: [],
-    }
+    showModal.value = true
+  } catch (error) {
+    console.error('Error loading modal data:', error)
+    alert('Có lỗi xảy ra khi tải dữ liệu!')
   }
-  showModal.value = true
 }
 
 const closeModal = () => {
@@ -550,7 +573,6 @@ const handleSubmit = async () => {
       scheduleId: form.value.scheduleId,
       driverId: form.value.driverId,
       assistantId: form.value.assistantId,
-      vehicleId: form.value.vehicleId,
       scheduledDeparture: form.value.scheduledDeparture || null,
       scheduledArrival: form.value.scheduledArrival || null,
       actualDeparture: form.value.actualDeparture || null,
@@ -563,8 +585,11 @@ const handleSubmit = async () => {
     }
 
     if (currentTrip.value) {
+      // When updating, don't include vehicleId in the request
       await updateTrip(currentTrip.value.tripId, tripData)
     } else {
+      // When creating new, include vehicleId
+      tripData.vehicleId = form.value.vehicleId
       await createTrip(tripData)
     }
 
