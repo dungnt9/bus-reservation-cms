@@ -98,6 +98,35 @@ const authService = {
         )
       })
   },
+
+  //Quên mật khẩu
+  async forgotPassword(phoneNumber) {
+    try {
+      const response = await api.post('/auth/forgot-password', { phoneNumber })
+      return response
+    } catch (error) {
+      if (error.response) {
+        throw new Error(error.response.data?.message || 'Gửi mã OTP thất bại')
+      }
+      throw new Error('Lỗi kết nối. Vui lòng kiểm tra lại mạng')
+    }
+  },
+
+  async resetPassword(phoneNumber, otp, newPassword) {
+    try {
+      const response = await api.post('/auth/reset-password', {
+        phoneNumber,
+        otp,
+        newPassword,
+      })
+      return response
+    } catch (error) {
+      if (error.response) {
+        throw new Error(error.response.data?.message || 'Đặt lại mật khẩu thất bại')
+      }
+      throw new Error('Lỗi kết nối. Vui lòng kiểm tra lại mạng')
+    }
+  },
 }
 
 export default authService

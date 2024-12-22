@@ -1,68 +1,123 @@
 <template>
   <div class="login-container">
     <div class="login-box">
-      <!-- Logo và Header -->
-      <div class="login-header">
-        <img src="/bus_logo.svg" alt="Bus Logo" class="logo" />
-        <h1>Welcome Back</h1>
-        <p>Please sign in to continue</p>
+      <!-- Normal Login Form -->
+      <div v-if="!showForgotPassword" class="login-content">
+        <div class="login-header">
+          <img src="/bus_logo.svg" alt="Bus Logo" class="logo" />
+          <h1>Welcome Back</h1>
+          <p>Please sign in to continue</p>
+        </div>
+
+        <form @submit.prevent="handleLogin" class="login-form">
+          <div class="form-group">
+            <label>Phone Number</label>
+            <input
+              type="text"
+              v-model="phoneNumber"
+              placeholder="Enter your phone number"
+              :class="{ error: errors.phoneNumber }"
+            />
+            <span class="error-message" v-if="errors.phoneNumber">{{ errors.phoneNumber }}</span>
+          </div>
+
+          <div class="form-group">
+            <label>Password</label>
+            <div class="password-input">
+              <input
+                :type="showPassword ? 'text' : 'password'"
+                v-model="password"
+                placeholder="Enter your password"
+                :class="{ error: errors.password }"
+              />
+              <button type="button" class="toggle-password" @click="togglePassword">
+                <i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+              </button>
+            </div>
+            <span class="error-message" v-if="errors.password">{{ errors.password }}</span>
+            <div class="forgot-password">
+              <a href="#" @click.prevent="toggleForgotPassword">Forgot Password?</a>
+            </div>
+          </div>
+
+          <div class="alert-error" v-if="errorMessage">
+            <i class="fas fa-exclamation-circle"></i>
+            {{ errorMessage }}
+          </div>
+
+          <button type="submit" class="login-button" :disabled="loading">
+            <span v-if="!loading">Sign In</span>
+            <div v-else class="spinner"></div>
+          </button>
+        </form>
       </div>
 
-      <!-- Form đăng nhập -->
-      <form @submit.prevent="handleLogin" class="login-form">
-        <!-- Số điện thoại -->
-        <div class="form-group">
-          <label>
-<!--            <i class="fas fa-phone"></i>-->
-            Phone Number
-          </label>
-          <input
-            type="text"
-            v-model="phoneNumber"
-            placeholder="Enter your phone number"
-            :class="{ 'error': errors.phoneNumber }"
-          />
-          <span class="error-message" v-if="errors.phoneNumber">{{ errors.phoneNumber }}</span>
+      <!-- Forgot Password Form -->
+      <div v-else class="login-content">
+        <div class="login-header">
+          <img src="/bus_logo.svg" alt="Bus Logo" class="logo" />
+          <h1>Reset Password</h1>
+          <p v-if="!otpSent">Enter your phone number to receive OTP</p>
+          <p v-else>Enter OTP and new password</p>
         </div>
 
-        <!-- Mật khẩu -->
-        <div class="form-group">
-          <label>
-<!--            <i class="fas fa-lock"></i>-->
-            Password
-          </label>
-          <div class="password-input">
+        <form @submit.prevent="handleResetPassword" class="login-form">
+          <div v-if="!otpSent" class="form-group">
+            <label>Phone Number</label>
             <input
-              :type="showPassword ? 'text' : 'password'"
-              v-model="password"
-              placeholder="Enter your password"
-              :class="{ 'error': errors.password }"
+              type="text"
+              v-model="resetPhone"
+              placeholder="Enter your phone number"
+              :class="{ error: errors.resetPhone }"
             />
-            <button
-              type="button"
-              class="toggle-password"
-              @click="togglePassword"
-            >
-              <i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
-            </button>
+            <span class="error-message" v-if="errors.resetPhone">{{ errors.resetPhone }}</span>
           </div>
-          <span class="error-message" v-if="errors.password">{{ errors.password }}</span>
-        </div>
 
-        <!-- Thông báo lỗi -->
-        <div class="alert-error" v-if="errorMessage">
-          <i class="fas fa-exclamation-circle"></i>
-          {{ errorMessage }}
-        </div>
+          <template v-else>
+            <div class="form-group">
+              <label>OTP Code</label>
+              <input
+                type="text"
+                v-model="otp"
+                placeholder="Enter OTP code"
+                :class="{ error: errors.otp }"
+              />
+              <span class="error-message" v-if="errors.otp">{{ errors.otp }}</span>
+            </div>
 
-        <!-- Nút đăng nhập -->
-        <button type="submit" class="login-button" :disabled="loading">
-          <span v-if="!loading">Sign In</span>
-          <div v-else class="spinner"></div>
-        </button>
-      </form>
+            <div class="form-group">
+              <label>New Password</label>
+              <div class="password-input">
+                <input
+                  :type="showNewPassword ? 'text' : 'password'"
+                  v-model="newPassword"
+                  placeholder="Enter new password"
+                  :class="{ error: errors.newPassword }"
+                />
+                <button type="button" class="toggle-password" @click="toggleNewPassword">
+                  <i :class="showNewPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+                </button>
+              </div>
+              <span class="error-message" v-if="errors.newPassword">{{ errors.newPassword }}</span>
+            </div>
+          </template>
 
-      <!-- Footer -->
+          <div class="alert-error" v-if="resetErrorMessage">
+            <i class="fas fa-exclamation-circle"></i>
+            {{ resetErrorMessage }}
+          </div>
+
+          <button type="submit" class="login-button" :disabled="resetLoading">
+            <span v-if="!resetLoading">{{ !otpSent ? 'Send OTP' : 'Reset Password' }}</span>
+            <div v-else class="spinner"></div>
+          </button>
+
+          <button @click.prevent="toggleForgotPassword" class="back-button">
+            <i class="fas fa-arrow-left"></i> Back to Login
+          </button>
+        </form>
+      </div>
+
       <div class="login-footer">
         <p>Bus Management System</p>
       </div>
@@ -70,23 +125,59 @@
   </div>
 </template>
 
+# script section
 <script setup>
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import authService from '@/services/authService'
 
 const router = useRouter()
+
+// Login form data
 const phoneNumber = ref('')
 const password = ref('')
 const showPassword = ref(false)
 const loading = ref(false)
 const errorMessage = ref('')
+
+// Reset password form data
+const showForgotPassword = ref(false)
+const resetPhone = ref('')
+const otp = ref('')
+const newPassword = ref('')
+const showNewPassword = ref(false)
+const resetLoading = ref(false)
+const resetErrorMessage = ref('')
+const otpSent = ref(false)
+
 const errors = reactive({
   phoneNumber: '',
-  password: ''
+  password: '',
+  resetPhone: '',
+  otp: '',
+  newPassword: '',
 })
 
-const validateForm = () => {
+// Toggle functions
+const togglePassword = () => (showPassword.value = !showPassword.value)
+const toggleNewPassword = () => (showNewPassword.value = !showNewPassword.value)
+const toggleForgotPassword = () => {
+  showForgotPassword.value = !showForgotPassword.value
+  resetForm()
+}
+
+// Reset form function
+const resetForm = () => {
+  resetPhone.value = ''
+  otp.value = ''
+  newPassword.value = ''
+  resetErrorMessage.value = ''
+  otpSent.value = false
+  Object.keys(errors).forEach((key) => (errors[key] = ''))
+}
+
+// Validation functions
+const validateLoginForm = () => {
   let isValid = true
   errors.phoneNumber = ''
   errors.password = ''
@@ -107,8 +198,37 @@ const validateForm = () => {
   return isValid
 }
 
+const validateResetForm = () => {
+  let isValid = true
+
+  if (!otpSent.value) {
+    if (!resetPhone.value) {
+      errors.resetPhone = 'Phone number is required'
+      isValid = false
+    } else if (!/^\d{10}$/.test(resetPhone.value)) {
+      errors.resetPhone = 'Please enter a valid 10-digit phone number'
+      isValid = false
+    }
+  } else {
+    if (!otp.value) {
+      errors.otp = 'OTP is required'
+      isValid = false
+    }
+    if (!newPassword.value) {
+      errors.newPassword = 'New password is required'
+      isValid = false
+    } else if (newPassword.value.length < 6) {
+      errors.newPassword = 'Password must be at least 6 characters'
+      isValid = false
+    }
+  }
+
+  return isValid
+}
+
+// Form submission handlers
 const handleLogin = async () => {
-  if (!validateForm()) return
+  if (!validateLoginForm()) return
 
   try {
     loading.value = true
@@ -126,8 +246,28 @@ const handleLogin = async () => {
   }
 }
 
-const togglePassword = () => {
-  showPassword.value = !showPassword.value
+const handleResetPassword = async () => {
+  if (!validateResetForm()) return
+
+  try {
+    resetLoading.value = true
+    resetErrorMessage.value = ''
+
+    if (!otpSent.value) {
+      // Send OTP
+      await authService.forgotPassword(resetPhone.value)
+      otpSent.value = true
+    } else {
+      // Reset password
+      await authService.resetPassword(resetPhone.value, otp.value, newPassword.value)
+      alert('Mật khẩu đã được đặt lại thành công. Vui lòng đăng nhập lại.')
+      toggleForgotPassword()
+    }
+  } catch (error) {
+    resetErrorMessage.value = error.message
+  } finally {
+    resetLoading.value = false
+  }
 }
 </script>
 
@@ -329,5 +469,48 @@ input.error {
     padding: 12px;
     font-size: 14px;
   }
+}
+
+.forgot-password {
+  text-align: right;
+  margin-top: 8px;
+}
+
+.forgot-password a {
+  color: #667eea;
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.3s;
+}
+
+.forgot-password a:hover {
+  color: #5a6fe4;
+  text-decoration: underline;
+}
+
+.back-button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 12px;
+  background: none;
+  border: 2px solid #667eea;
+  border-radius: 10px;
+  color: #667eea;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.back-button:hover {
+  background: #f0f4ff;
+}
+
+.back-button i {
+  font-size: 12px;
 }
 </style>
