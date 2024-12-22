@@ -82,13 +82,15 @@ export const getActiveRouteSchedules = async () => {
 
 export const getAvailableVehicles = async () => {
   try {
-    const response = await api.get('/vehicles/available')
+    // Chỉ lấy những xe có status = active và không trong chuyến nào
+    const response = await api.get('/vehicles/available-not-in-trip')
     return response
   } catch (error) {
     console.error('Error fetching available vehicles:', error)
     throw error
   }
 }
+
 // Tài xế đang chạy
 export const getDriversForTrip = async (tripId) => {
   try {
@@ -106,6 +108,16 @@ export const getAssistantsForTrip = async (tripId) => {
     return response
   } catch (error) {
     console.error('Error fetching assistants for trip:', error)
+    throw error
+  }
+}
+
+export const getVehiclesForTrip = async (tripId) => {
+  try {
+    const response = await api.get(`/trips/${tripId}/vehicles/available`)
+    return response
+  } catch (error) {
+    console.error('Error fetching vehicles for trip:', error)
     throw error
   }
 }

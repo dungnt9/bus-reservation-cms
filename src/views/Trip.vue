@@ -114,9 +114,10 @@
               {{ validationErrors.assistantId }}
             </div>
           </div>
-          <div class="col-md-6 mb-3" v-if="!currentTrip">
+          <div class="col-md-6 mb-3">
             <label class="form-label">Xe<span class="text-danger">*</span></label>
             <select
+              v-if="!currentTrip"
               class="form-control"
               v-model="form.vehicleId"
               :class="{ 'is-invalid': validationErrors.vehicleId }"
@@ -130,13 +131,16 @@
                 {{ vehicle.plateNumber }} ({{ vehicle.seatCapacity }} ghế)
               </option>
             </select>
+            <input
+              v-else
+              type="text"
+              class="form-control"
+              :value="form.vehiclePlateNumber"
+              disabled
+            />
             <div class="invalid-feedback" v-if="validationErrors.vehicleId">
               {{ validationErrors.vehicleId }}
             </div>
-          </div>
-          <div class="col-md-6 mb-3" v-else>
-            <label class="form-label">Biển số xe</label>
-            <input type="text" class="form-control" :value="form.vehiclePlateNumber" disabled />
           </div>
         </div>
 
@@ -253,6 +257,7 @@ import {
   getAvailableVehicles,
   getDriversForTrip,
   getAssistantsForTrip,
+  getVehiclesForTrip,
 } from '../services/tripService'
 import CustomModal from '../components/Modal.vue'
 
@@ -481,7 +486,7 @@ const openModal = async (trip = null) => {
 
   try {
     if (trip) {
-      // Khi edit, lấy danh sách drivers và assistants bao gồm cả người đang chạy chuyến này
+      // Khi edit
       const [driversData, assistantsData] = await Promise.all([
         getDriversForTrip(trip.tripId),
         getAssistantsForTrip(trip.tripId),
@@ -495,12 +500,13 @@ const openModal = async (trip = null) => {
         scheduleId: trip.scheduleId,
         driverId: trip.driverId,
         assistantId: trip.assistantId,
+        vehicleId: trip.vehicleId,
         scheduledDeparture: trip.scheduledDeparture ? trip.scheduledDeparture.slice(0, 16) : '',
         scheduledArrival: trip.scheduledArrival ? trip.scheduledArrival.slice(0, 16) : '',
         actualDeparture: trip.actualDeparture ? trip.actualDeparture.slice(0, 16) : '',
         actualArrival: trip.actualArrival ? trip.actualArrival.slice(0, 16) : '',
         tripStatus: trip.tripStatus,
-        vehiclePlateNumber: trip.vehiclePlateNumber,
+        vehiclePlateNumber: trip.vehiclePlateNumber, // Hiển thị biển số xe
         totalSeats: trip.totalSeats,
         availableSeats: trip.availableSeats,
         tripSeats: trip.tripSeats.map((seat) => ({
@@ -509,14 +515,16 @@ const openModal = async (trip = null) => {
         })),
       }
     } else {
-      // Khi tạo mới, chỉ lấy available drivers và assistants
-      const [driversData, assistantsData] = await Promise.all([
+      // Khi tạo mới
+      const [driversData, assistantsData, vehiclesData] = await Promise.all([
         getAvailableDrivers(),
         getAvailableAssistants(),
+        getAvailableVehicles(),
       ])
 
       drivers.value = driversData
       assistants.value = assistantsData
+      availableVehicles.value = vehiclesData
 
       // Reset form
       form.value = {
