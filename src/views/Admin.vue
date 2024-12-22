@@ -11,38 +11,38 @@
 
     <table class="table table-striped table-bordered table-hover">
       <thead>
-      <tr>
-        <th class="title-table text-center" v-for="(label, column) in columns" :key="column">
-          {{ label }}
-        </th>
-        <th class="title-table text-center action">Hành động</th>
-      </tr>
-      <tr>
-        <th v-for="(label, column) in columns" :key="column + '-filter'">
-          <input
-            type="text"
-            class="form-control form-control-sm"
-            :placeholder="`Lọc ${label}`"
-            v-model="filters[column]"
-          />
-        </th>
-        <th></th>
-      </tr>
+        <tr>
+          <th class="title-table text-center" v-for="(label, column) in columns" :key="column">
+            {{ label }}
+          </th>
+          <th class="title-table text-center action">Hành động</th>
+        </tr>
+        <tr>
+          <th v-for="(label, column) in columns" :key="column + '-filter'">
+            <input
+              type="text"
+              class="form-control form-control-sm"
+              :placeholder="`Lọc ${label}`"
+              v-model="filters[column]"
+            />
+          </th>
+          <th></th>
+        </tr>
       </thead>
       <tbody>
-      <tr v-for="admin in filteredAdmins" :key="admin.adminId">
-        <td v-for="(label, column) in columns" :key="column" class="text-center">
-          {{ formatColumnValue(admin[column], column) }}
-        </td>
-        <td class="action">
-          <button class="btn btn-warning btn-sm me-2" @click="openModal(admin)">
-            <i class="fas fa-edit"></i>
-          </button>
-          <button class="btn btn-danger btn-sm" @click="handleDelete(admin.adminId)">
-            <i class="fas fa-trash-alt"></i>
-          </button>
-        </td>
-      </tr>
+        <tr v-for="admin in filteredAdmins" :key="admin.adminId">
+          <td v-for="(label, column) in columns" :key="column" class="text-center">
+            {{ formatColumnValue(admin[column], column) }}
+          </td>
+          <td class="action">
+            <button class="btn btn-warning btn-sm me-2" @click="openModal(admin)">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn btn-danger btn-sm" @click="handleDelete(admin.adminId)">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </td>
+        </tr>
       </tbody>
     </table>
 
@@ -133,6 +133,12 @@
         </button>
       </template>
     </CustomModal>
+
+    <Pagination
+      :current-page="currentPage"
+      :total-pages="totalPages"
+      @page-change="handlePageChange"
+    />
   </div>
 </template>
 
@@ -141,6 +147,13 @@ import { ref, onMounted, computed } from 'vue'
 import { getAllAdmins, createAdmin, updateAdmin, deleteAdmin } from '../services/adminService'
 import CustomModal from '../components/Modal.vue'
 import { validEmail, validPhone, validName, validAddress } from '../utils/validators'
+import Pagination from '@/components/Pagination.vue'
+
+// Add pagination state
+const currentPage = ref(0)
+const pageSize = ref(10)
+const totalPages = ref(0)
+const totalElements = ref(0)
 
 // Reactive state
 const admins = ref([])
@@ -239,11 +252,18 @@ const filteredAdmins = computed(() => {
 // Fetch admins
 const fetchAdmins = async () => {
   try {
-    const response = await getAllAdmins()
-    admins.value = response
+    const response = await getAllAdmins(currentPage.value, pageSize.value)
+    admins.value = response.content
+    totalPages.value = response.totalPages
+    totalElements.value = response.totalElements
   } catch (error) {
     console.error('Error fetching admins:', error)
   }
+}
+
+const handlePageChange = async (page) => {
+  currentPage.value = page
+  await fetchAdmins()
 }
 
 // Modal methods
@@ -300,8 +320,8 @@ const handleSubmit = async () => {
         gender: form.value.gender,
         address: form.value.address,
         dateOfBirth: form.value.dateOfBirth,
-        userRole: 'admin'
-      }
+        userRole: 'admin',
+      },
     }
 
     if (currentAdmin.value) {

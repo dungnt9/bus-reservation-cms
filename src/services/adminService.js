@@ -12,10 +12,11 @@ export const createAdmin = async (admin) => {
 }
 
 // Get all admins
-export const getAllAdmins = async () => {
+export const getAllAdmins = async (page = 0, size = 10) => {
   try {
-    const response = await api.get('/admins')
-    console.log('response.data:', response)
+    const response = await api.get('/admins', {
+      params: { page, size },
+    })
     return response
   } catch (error) {
     console.error('Error fetching admins:', error)
