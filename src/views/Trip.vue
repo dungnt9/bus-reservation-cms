@@ -11,38 +11,38 @@
 
     <table class="table table-striped table-bordered table-hover">
       <thead>
-      <tr>
-        <th class="title-table text-center" v-for="(label, column) in columns" :key="column">
-          {{ label }}
-        </th>
-        <th class="title-table text-center action">Hành động</th>
-      </tr>
-      <tr>
-        <th v-for="(label, column) in columns" :key="column + '-filter'">
-          <input
-            type="text"
-            class="form-control form-control-sm"
-            :placeholder="`Lọc ${label}`"
-            v-model="filters[column]"
-          />
-        </th>
-        <th></th>
-      </tr>
+        <tr>
+          <th class="title-table text-center" v-for="(label, column) in columns" :key="column">
+            {{ label }}
+          </th>
+          <th class="title-table text-center action">Hành động</th>
+        </tr>
+        <tr>
+          <th v-for="(label, column) in columns" :key="column + '-filter'">
+            <input
+              type="text"
+              class="form-control form-control-sm"
+              :placeholder="`Lọc ${label}`"
+              v-model="filters[column]"
+            />
+          </th>
+          <th></th>
+        </tr>
       </thead>
       <tbody>
-      <tr v-for="trip in filteredTrips" :key="trip.tripId">
-        <td v-for="(label, column) in columns" :key="column" class="text-center">
-          {{ formatColumnValue(trip[column], column) }}
-        </td>
-        <td class="action">
-          <button class="btn btn-warning btn-sm me-2" @click="openModal(trip)">
-            <i class="fas fa-edit"></i>
-          </button>
-          <button class="btn btn-danger btn-sm" @click="handleDelete(trip.tripId)">
-            <i class="fas fa-trash-alt"></i>
-          </button>
-        </td>
-      </tr>
+        <tr v-for="trip in filteredTrips" :key="trip.tripId">
+          <td v-for="(label, column) in columns" :key="column" class="text-center">
+            {{ formatColumnValue(trip[column], column) }}
+          </td>
+          <td class="action">
+            <button class="btn btn-warning btn-sm me-2" @click="openModal(trip)">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn btn-danger btn-sm" @click="handleDelete(trip.tripId)">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </td>
+        </tr>
       </tbody>
     </table>
 
@@ -66,8 +66,9 @@
                 :key="schedule.scheduleId"
                 :value="schedule.scheduleId"
               >
-                {{ schedule.routeName }} - {{ formatTime(schedule.departureTime) }}
-                ({{ formatDaysOfWeek(schedule.daysOfWeek) }})
+                {{ schedule.routeName }} - {{ formatTime(schedule.departureTime) }} ({{
+                  formatDaysOfWeek(schedule.daysOfWeek)
+                }})
               </option>
             </select>
             <div class="invalid-feedback" v-if="validationErrors.scheduleId">
@@ -83,11 +84,7 @@
               :disabled="currentTrip"
             >
               <option value="">Chọn tài xế</option>
-              <option
-                v-for="driver in drivers"
-                :key="driver.driverId"
-                :value="driver.driverId"
-              >
+              <option v-for="driver in drivers" :key="driver.driverId" :value="driver.driverId">
                 {{ driver.fullName }}
               </option>
             </select>
@@ -141,18 +138,15 @@
           </div>
           <div class="col-md-6 mb-3" v-else>
             <label class="form-label">Biển số xe</label>
-            <input
-              type="text"
-              class="form-control"
-              :value="form.vehiclePlateNumber"
-              disabled
-            />
+            <input type="text" class="form-control" :value="form.vehiclePlateNumber" disabled />
           </div>
         </div>
 
         <div class="row">
           <div class="col-md-6 mb-3">
-            <label class="form-label">Thời gian khởi hành (dự kiến)<span class="text-danger">*</span></label>
+            <label class="form-label"
+              >Thời gian khởi hành (dự kiến)<span class="text-danger">*</span></label
+            >
             <input
               type="datetime-local"
               class="form-control"
@@ -165,7 +159,9 @@
             </div>
           </div>
           <div class="col-md-6 mb-3">
-            <label class="form-label">Thời gian đến (dự kiến)<span class="text-danger">*</span></label>
+            <label class="form-label"
+              >Thời gian đến (dự kiến)<span class="text-danger">*</span></label
+            >
             <input
               type="datetime-local"
               class="form-control"
@@ -184,19 +180,11 @@
           <div class="row">
             <div class="col-md-6 mb-3">
               <label class="form-label">Thời gian khởi hành thực tế</label>
-              <input
-                type="datetime-local"
-                class="form-control"
-                v-model="form.actualDeparture"
-              />
+              <input type="datetime-local" class="form-control" v-model="form.actualDeparture" />
             </div>
             <div class="col-md-6 mb-3">
               <label class="form-label">Thời gian đến thực tế</label>
-              <input
-                type="datetime-local"
-                class="form-control"
-                v-model="form.actualArrival"
-              />
+              <input type="datetime-local" class="form-control" v-model="form.actualArrival" />
             </div>
           </div>
 
@@ -211,12 +199,7 @@
             </div>
             <div class="col-md-6 mb-3">
               <label class="form-label">Tổng số ghế</label>
-              <input
-                type="text"
-                class="form-control"
-                :value="form.totalSeats"
-                disabled
-              />
+              <input type="text" class="form-control" :value="form.totalSeats" disabled />
             </div>
           </div>
 
@@ -226,23 +209,23 @@
               <div class="table-responsive">
                 <table class="table table-sm">
                   <thead>
-                  <tr>
-                    <th>Số ghế</th>
-                    <th>Biển số xe</th>
-                    <th>Trạng thái</th>
-                  </tr>
+                    <tr>
+                      <th>Số ghế</th>
+                      <th>Biển số xe</th>
+                      <th>Trạng thái</th>
+                    </tr>
                   </thead>
                   <tbody>
-                  <tr v-for="seat in form.tripSeats" :key="seat.tripSeatId">
-                    <td>{{ seat.seatNumber }}</td>
-                    <td>{{ seat.vehiclePlateNumber }}</td>
-                    <td>
-                      <select v-model="seat.status" class="form-select form-select-sm">
-                        <option value="available">Trống</option>
-                        <option value="booked">Đã đặt</option>
-                      </select>
-                    </td>
-                  </tr>
+                    <tr v-for="seat in form.tripSeats" :key="seat.tripSeatId">
+                      <td>{{ seat.seatNumber }}</td>
+                      <td>{{ seat.vehiclePlateNumber }}</td>
+                      <td>
+                        <select v-model="seat.status" class="form-select form-select-sm">
+                          <option value="available">Trống</option>
+                          <option value="booked">Đã đặt</option>
+                        </select>
+                      </td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
@@ -271,7 +254,7 @@ import {
   getAvailableDrivers,
   getAvailableAssistants,
   getActiveRouteSchedules,
-  getAvailableVehicles
+  getAvailableVehicles,
 } from '../services/tripService'
 import CustomModal from '../components/Modal.vue'
 
@@ -299,7 +282,7 @@ const columns = {
   scheduledArrival: 'Giờ đến (dự kiến)',
   actualDeparture: 'Giờ khởi hành thực tế',
   actualArrival: 'Giờ đến thực tế',
-  tripStatus: 'Trạng thái chuyến xe'
+  tripStatus: 'Trạng thái chuyến xe',
 }
 
 // Initial form state
@@ -316,19 +299,19 @@ const form = ref({
   vehiclePlateNumber: '',
   totalSeats: 0,
   availableSeats: 0,
-  tripSeats: []
+  tripSeats: [],
 })
 
 // Helper functions
 const formatDayOfWeek = (dayString) => {
   const dayMap = {
-    'MONDAY': 'Thứ 2',
-    'TUESDAY': 'Thứ 3',
-    'WEDNESDAY': 'Thứ 4',
-    'THURSDAY': 'Thứ 5',
-    'FRIDAY': 'Thứ 6',
-    'SATURDAY': 'Thứ 7',
-    'SUNDAY': 'Chủ nhật'
+    MONDAY: 'Thứ 2',
+    TUESDAY: 'Thứ 3',
+    WEDNESDAY: 'Thứ 4',
+    THURSDAY: 'Thứ 5',
+    FRIDAY: 'Thứ 6',
+    SATURDAY: 'Thứ 7',
+    SUNDAY: 'Chủ nhật',
   }
   return dayMap[dayString] || dayString
 }
@@ -378,15 +361,16 @@ const validateForm = () => {
 
   // Validate scheduled departure matches route schedule days
   if (form.value.scheduleId && form.value.scheduledDeparture) {
-    const selectedSchedule = routeSchedules.value.find(s => s.scheduleId === form.value.scheduleId)
+    const selectedSchedule = routeSchedules.value.find(
+      (s) => s.scheduleId === form.value.scheduleId,
+    )
     if (selectedSchedule) {
       const departureDate = new Date(form.value.scheduledDeparture)
       const days = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY']
       const departureDayName = days[departureDate.getDay()]
 
       if (!selectedSchedule.daysOfWeek.includes(departureDayName)) {
-        validationErrors.value.scheduledDeparture =
-          `Ngày khởi hành phải là một trong các ngày: ${formatDaysOfWeek(selectedSchedule.daysOfWeek)}`
+        validationErrors.value.scheduledDeparture = `Ngày khởi hành phải là một trong các ngày: ${formatDaysOfWeek(selectedSchedule.daysOfWeek)}`
         isValid = false
       }
     }
@@ -417,25 +401,40 @@ const validateForm = () => {
     const actualDepartureTime = new Date(form.value.actualDeparture)
     const actualArrivalTime = new Date(form.value.actualArrival)
     if (actualArrivalTime <= actualDepartureTime) {
-      validationErrors.value.actualArrival = 'Thời gian đến thực tế phải sau thời gian khởi hành thực tế'
+      validationErrors.value.actualArrival =
+        'Thời gian đến thực tế phải sau thời gian khởi hành thực tế'
       isValid = false
     }
   }
 
   return isValid
 }
+
+const formatDateTime = (datetime) => {
+  if (!datetime) return ''
+  // Convert to local timezone for display
+  return new Date(datetime).toLocaleString('vi-VN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  })
+}
+
 const formatColumnValue = (value, column) => {
   if (!value) return ''
 
   if (column.includes('scheduled') || column.includes('actual')) {
-    return new Date(value).toLocaleString('vi-VN')
+    return formatDateTime(value)
   }
 
   if (column === 'tripStatus') {
     const statusMap = {
-      'in_progress': 'Đang chạy',
-      'completed': 'Đã hoàn thành',
-      'cancelled': 'Đã hủy'
+      in_progress: 'Đang chạy',
+      completed: 'Đã hoàn thành',
+      cancelled: 'Đã hủy',
     }
     return statusMap[value] || value
   }
@@ -457,13 +456,15 @@ const filteredTrips = computed(() => {
 // Methods
 const fetchData = async () => {
   try {
-    const [tripsData, driversData, assistantsData, schedulesData, vehiclesData] = await Promise.all([
-      getAllTrips(),
-      getAvailableDrivers(),
-      getAvailableAssistants(),
-      getActiveRouteSchedules(),
-      getAvailableVehicles()
-    ])
+    const [tripsData, driversData, assistantsData, schedulesData, vehiclesData] = await Promise.all(
+      [
+        getAllTrips(),
+        getAvailableDrivers(),
+        getAvailableAssistants(),
+        getActiveRouteSchedules(),
+        getAvailableVehicles(),
+      ],
+    )
 
     trips.value = tripsData
     drivers.value = driversData
@@ -485,18 +486,18 @@ const openModal = (trip = null) => {
       scheduleId: trip.scheduleId,
       driverId: trip.driverId,
       assistantId: trip.assistantId,
-      scheduledDeparture: trip.scheduledDeparture ? new Date(trip.scheduledDeparture).toISOString().slice(0, 16) : '',
-      scheduledArrival: trip.scheduledArrival ? new Date(trip.scheduledArrival).toISOString().slice(0, 16) : '',
-      actualDeparture: trip.actualDeparture ? new Date(trip.actualDeparture).toISOString().slice(0, 16) : '',
-      actualArrival: trip.actualArrival ? new Date(trip.actualArrival).toISOString().slice(0, 16) : '',
+      scheduledDeparture: trip.scheduledDeparture ? trip.scheduledDeparture.slice(0, 16) : '',
+      scheduledArrival: trip.scheduledArrival ? trip.scheduledArrival.slice(0, 16) : '',
+      actualDeparture: trip.actualDeparture ? trip.actualDeparture.slice(0, 16) : '',
+      actualArrival: trip.actualArrival ? trip.actualArrival.slice(0, 16) : '',
       tripStatus: trip.tripStatus,
       vehiclePlateNumber: trip.vehiclePlateNumber,
       totalSeats: trip.totalSeats,
       availableSeats: trip.availableSeats,
-      tripSeats: trip.tripSeats.map(seat => ({
+      tripSeats: trip.tripSeats.map((seat) => ({
         ...seat,
-        status: seat.status
-      }))
+        status: seat.status,
+      })),
     }
   } else {
     form.value = {
@@ -512,7 +513,7 @@ const openModal = (trip = null) => {
       vehiclePlateNumber: '',
       totalSeats: 0,
       availableSeats: 0,
-      tripSeats: []
+      tripSeats: [],
     }
   }
   showModal.value = true
@@ -535,7 +536,7 @@ const closeModal = () => {
     vehiclePlateNumber: '',
     totalSeats: 0,
     availableSeats: 0,
-    tripSeats: []
+    tripSeats: [],
   }
 }
 
@@ -550,15 +551,15 @@ const handleSubmit = async () => {
       driverId: form.value.driverId,
       assistantId: form.value.assistantId,
       vehicleId: form.value.vehicleId,
-      scheduledDeparture: form.value.scheduledDeparture ? new Date(form.value.scheduledDeparture).toISOString() : null,
-      scheduledArrival: form.value.scheduledArrival ? new Date(form.value.scheduledArrival).toISOString() : null,
-      actualDeparture: form.value.actualDeparture ? new Date(form.value.actualDeparture).toISOString() : null,
-      actualArrival: form.value.actualArrival ? new Date(form.value.actualArrival).toISOString() : null,
+      scheduledDeparture: form.value.scheduledDeparture || null,
+      scheduledArrival: form.value.scheduledArrival || null,
+      actualDeparture: form.value.actualDeparture || null,
+      actualArrival: form.value.actualArrival || null,
       tripStatus: form.value.tripStatus,
-      tripSeats: form.value.tripSeats?.map(seat => ({
+      tripSeats: form.value.tripSeats?.map((seat) => ({
         tripSeatId: seat.tripSeatId,
-        status: seat.status
-      }))
+        status: seat.status,
+      })),
     }
 
     if (currentTrip.value) {
