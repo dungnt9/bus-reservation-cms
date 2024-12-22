@@ -11,38 +11,38 @@
 
     <table class="table table-striped table-bordered table-hover">
       <thead>
-      <tr>
-        <th class="title-table text-center" v-for="(label, column) in columns" :key="column">
-          {{ label }}
-        </th>
-        <th class="title-table text-center action">Hành động</th>
-      </tr>
-      <tr>
-        <th v-for="(label, column) in columns" :key="column + '-filter'">
-          <input
-            type="text"
-            class="form-control form-control-sm"
-            :placeholder="`Lọc ${label}`"
-            v-model="filters[column]"
-          />
-        </th>
-        <th></th>
-      </tr>
+        <tr>
+          <th class="title-table text-center" v-for="(label, column) in columns" :key="column">
+            {{ label }}
+          </th>
+          <th class="title-table text-center action">Hành động</th>
+        </tr>
+        <tr>
+          <th v-for="(label, column) in columns" :key="column + '-filter'">
+            <input
+              type="text"
+              class="form-control form-control-sm"
+              :placeholder="`Lọc ${label}`"
+              v-model="filters[column]"
+            />
+          </th>
+          <th></th>
+        </tr>
       </thead>
       <tbody>
-      <tr v-for="vehicle in filteredVehicles" :key="vehicle.vehicleId">
-        <td v-for="(label, column) in columns" :key="column" class="text-center">
-          {{ formatColumnValue(vehicle[column], column) }}
-        </td>
-        <td class="action">
-          <button class="btn btn-warning btn-sm me-2" @click="openModal(vehicle)">
-            <i class="fas fa-edit"></i>
-          </button>
-          <button class="btn btn-danger btn-sm" @click="handleDelete(vehicle.vehicleId)">
-            <i class="fas fa-trash-alt"></i>
-          </button>
-        </td>
-      </tr>
+        <tr v-for="vehicle in filteredVehicles" :key="vehicle.vehicleId">
+          <td v-for="(label, column) in columns" :key="column" class="text-center">
+            {{ formatColumnValue(vehicle[column], column) }}
+          </td>
+          <td class="action">
+            <button class="btn btn-warning btn-sm me-2" @click="openModal(vehicle)">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn btn-danger btn-sm" @click="handleDelete(vehicle.vehicleId)">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </td>
+        </tr>
       </tbody>
     </table>
 
@@ -70,12 +70,9 @@
               type="number"
               class="form-control"
               v-model="form.seatCapacity"
-              :class="{ 'is-invalid': validationErrors.seatCapacity }"
-              min="1"
+              disabled
+              value="45"
             />
-            <div class="invalid-feedback" v-if="validationErrors.seatCapacity">
-              {{ validationErrors.seatCapacity }}
-            </div>
           </div>
         </div>
 
@@ -110,7 +107,12 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import { getAllVehicles, createVehicle, updateVehicle, deleteVehicle } from '../services/vehicleService'
+import {
+  getAllVehicles,
+  createVehicle,
+  updateVehicle,
+  deleteVehicle,
+} from '../services/vehicleService'
 import CustomModal from '../components/Modal.vue'
 
 // Reactive state
@@ -125,14 +127,14 @@ const columns = {
   vehicleId: 'ID Phương tiện',
   plateNumber: 'Biển số xe',
   seatCapacity: 'Số chỗ ngồi',
-  vehicleStatus: 'Trạng thái'
+  vehicleStatus: 'Trạng thái',
 }
 
 // Initial form state
 const form = ref({
   plateNumber: '',
-  seatCapacity: null,
-  vehicleStatus: 'active'
+  seatCapacity: 45,
+  vehicleStatus: 'active',
 })
 
 const validateForm = () => {
@@ -147,13 +149,7 @@ const validateForm = () => {
     isValid = false
   }
 
-  if (!form.value.seatCapacity) {
-    validationErrors.value.seatCapacity = 'Số chỗ ngồi không được để trống'
-    isValid = false
-  } else if (form.value.seatCapacity < 1) {
-    validationErrors.value.seatCapacity = 'Số chỗ ngồi phải lớn hơn 0'
-    isValid = false
-  }
+  // Số chỗ ngồi luôn là 45 nên không cần validate
 
   if (!form.value.vehicleStatus) {
     validationErrors.value.vehicleStatus = 'Trạng thái không được để trống'
@@ -169,7 +165,7 @@ const formatColumnValue = (value, column) => {
     const statusMap = {
       active: 'Hoạt động',
       maintenance: 'Bảo dưỡng',
-      retired: 'Ngừng hoạt động'
+      retired: 'Ngừng hoạt động',
     }
     return statusMap[value] || value
   }
@@ -206,14 +202,14 @@ const openModal = (vehicle = null) => {
   if (vehicle) {
     form.value = {
       plateNumber: vehicle.plateNumber,
-      seatCapacity: vehicle.seatCapacity,
-      vehicleStatus: vehicle.vehicleStatus
+      seatCapacity: 45,
+      vehicleStatus: vehicle.vehicleStatus,
     }
   } else {
     form.value = {
       plateNumber: '',
-      seatCapacity: null,
-      vehicleStatus: 'active'
+      seatCapacity: 45,
+      vehicleStatus: 'active',
     }
   }
   showModal.value = true
@@ -225,8 +221,8 @@ const closeModal = () => {
   validationErrors.value = {}
   form.value = {
     plateNumber: '',
-    seatCapacity: null,
-    vehicleStatus: 'active'
+    seatCapacity: 45,
+    vehicleStatus: 'active',
   }
 }
 
@@ -239,8 +235,8 @@ const handleSubmit = async () => {
 
     const vehicleData = {
       plateNumber: form.value.plateNumber.trim(),
-      seatCapacity: parseInt(form.value.seatCapacity),
-      vehicleStatus: form.value.vehicleStatus
+      seatCapacity: 45,
+      vehicleStatus: form.value.vehicleStatus,
     }
 
     if (currentVehicle.value) {
