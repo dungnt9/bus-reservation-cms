@@ -1,4 +1,3 @@
-<!-- src/views/Customer.vue -->
 <template>
   <div class="bg-white p-4 rounded-lg border">
     <h2 class="text-primary fw-bold mb-4">Quản lý thông tin khách hàng</h2>
@@ -13,41 +12,41 @@
     <!-- Bảng hiển thị khách hàng -->
     <table class="table table-striped table-bordered table-hover">
       <thead>
-      <tr>
-        <th class="title-table text-center" v-for="(label, column) in columns" :key="column">
-          {{ label }}
-        </th>
-        <th class="title-table text-center action">Hành động</th>
-      </tr>
-      <tr>
-        <th v-for="(label, column) in columns" :key="column + '-filter'">
-          <input
-            type="text"
-            class="form-control form-control-sm"
-            :placeholder="`Lọc ${label}`"
-            v-model="filters[column]"
-          />
-        </th>
-        <th></th>
-      </tr>
+        <tr>
+          <th class="title-table text-center" v-for="(label, column) in columns" :key="column">
+            {{ label }}
+          </th>
+          <th class="title-table text-center action">Hành động</th>
+        </tr>
+        <tr>
+          <th v-for="(label, column) in columns" :key="column + '-filter'">
+            <input
+              type="text"
+              class="form-control form-control-sm"
+              :placeholder="`Lọc ${label}`"
+              v-model="filters[column]"
+            />
+          </th>
+          <th></th>
+        </tr>
       </thead>
       <tbody>
-      <tr v-for="customer in filteredCustomers" :key="customer.customerId">
-        <td v-for="(label, column) in columns" :key="column" class="text-center">
-          {{ formatColumnValue(customer[column], column) }}
-        </td>
-        <td class="action">
-          <button class="btn btn-success btn-sm me-2" @click="openInvoiceModal(customer)">
-            <i class="fas fa-file-invoice"></i>
-          </button>
-          <button class="btn btn-warning btn-sm me-2" @click="openModal(customer)">
-            <i class="fas fa-edit"></i>
-          </button>
-          <button class="btn btn-danger btn-sm" @click="handleDelete(customer.customerId)">
-            <i class="fas fa-trash-alt"></i>
-          </button>
-        </td>
-      </tr>
+        <tr v-for="customer in filteredCustomers" :key="customer.customerId">
+          <td v-for="(label, column) in columns" :key="column" class="text-center">
+            {{ formatColumnValue(customer[column], column) }}
+          </td>
+          <td class="action">
+            <button class="btn btn-success btn-sm me-2" @click="openInvoiceModal(customer)">
+              <i class="fas fa-file-invoice"></i>
+            </button>
+            <button class="btn btn-warning btn-sm me-2" @click="openModal(customer)">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn btn-danger btn-sm" @click="handleDelete(customer.customerId)">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </td>
+        </tr>
       </tbody>
     </table>
 
@@ -141,33 +140,19 @@
     </CustomModal>
 
     <!-- Modal tạo hóa đơn -->
-    <CustomModal
-      v-model="showInvoiceModal"
-      title="Tạo hóa đơn"
-    >
+    <CustomModal v-model="showInvoiceModal" title="Tạo hóa đơn">
       <form @submit.prevent="handleInvoiceSubmit" novalidate>
         <!-- Thông tin khách hàng và chuyến xe -->
         <div class="row mb-3">
           <div class="col-md-6">
             <label class="form-label">Khách hàng</label>
-            <input
-              type="text"
-              class="form-control"
-              :value="selectedCustomerInfo"
-              disabled
-            />
+            <input type="text" class="form-control" :value="selectedCustomerInfo" disabled />
           </div>
           <div class="col-md-6">
             <label class="form-label">Chuyến xe<span class="text-danger">*</span></label>
-            <select
-              class="form-control"
-              v-model="invoiceForm.tripId"
-              @change="handleTripChange"
-            >
+            <select class="form-control" v-model="invoiceForm.tripId" @change="handleTripChange">
               <option value="">Chọn chuyến xe</option>
-              <option v-for="trip in availableTrips"
-                      :key="trip.tripId"
-                      :value="trip.tripId">
+              <option v-for="trip in availableTrips" :key="trip.tripId" :value="trip.tripId">
                 {{ formatTripOption(trip) }}
               </option>
             </select>
@@ -178,12 +163,7 @@
         <div class="row mb-3">
           <div class="col-md-12">
             <label class="form-label">Ghế đã chọn</label>
-            <input
-              type="text"
-              class="form-control"
-              :value="selectedSeatsDisplay"
-              disabled
-            />
+            <input type="text" class="form-control" :value="selectedSeatsDisplay" disabled />
           </div>
         </div>
 
@@ -202,7 +182,7 @@
           v-if="showSeatSelection"
           v-model="invoiceForm.selectedSeats"
           :booked-seats="bookedSeats"
-          @seat-selected="updateTotalPrice"
+          @seat-selected="handleSeatSelection"
         />
 
         <!-- Thông tin thanh toán -->
@@ -235,11 +215,7 @@
 
       <template #footer>
         <button class="btn btn-secondary me-2" @click="closeInvoiceModal">Hủy</button>
-        <button
-          class="btn btn-primary"
-          @click="handleInvoiceSubmit"
-          :disabled="!isValidInvoice"
-        >
+        <button class="btn btn-primary" @click="handleInvoiceSubmit" :disabled="!isValidInvoice">
           Tạo hóa đơn
         </button>
       </template>
@@ -251,7 +227,12 @@
 import { ref, computed, onMounted } from 'vue'
 import CustomModal from '../components/Modal.vue'
 import Seat from '../components/Seat.vue'
-import { createCustomer, getAllCustomers, updateCustomer, deleteCustomer } from '../services/customerService'
+import {
+  createCustomer,
+  getAllCustomers,
+  updateCustomer,
+  deleteCustomer,
+} from '../services/customerService'
 import { createInvoice, getAvailableTrips, getTripSeats } from '../services/invoiceService'
 import { validEmail, validPhone, validName, validAddress } from '../utils/validators'
 
@@ -281,8 +262,8 @@ const form = ref({
     gender: 'male',
     address: '',
     dateOfBirth: '',
-    userRole: 'customer'
-  }
+    userRole: 'customer',
+  },
 })
 
 const invoiceForm = ref({
@@ -290,7 +271,7 @@ const invoiceForm = ref({
   selectedSeats: [],
   totalPrice: 0,
   paymentStatus: 'pending',
-  paymentMethod: 'card'
+  paymentMethod: 'card',
 })
 
 // Columns Definition
@@ -302,7 +283,7 @@ const columns = {
   email: 'Email',
   gender: 'Giới tính',
   address: 'Địa chỉ',
-  dateOfBirth: 'Ngày sinh'
+  dateOfBirth: 'Ngày sinh',
 }
 
 // Computed Properties
@@ -328,10 +309,23 @@ const selectedSeatsDisplay = computed(() => {
 })
 
 const isValidInvoice = computed(() => {
-  return invoiceForm.value.tripId &&
+  return (
+    invoiceForm.value.tripId &&
     invoiceForm.value.selectedSeats.length > 0 &&
-    selectedCustomer.value
+    selectedCustomer.value &&
+    invoiceForm.value.paymentStatus &&
+    invoiceForm.value.paymentMethod
+  )
 })
+
+const handleSeatSelection = (selectedSeats) => {
+  if (!ticketPrice.value) {
+    console.error('No ticket price available')
+    return
+  }
+  invoiceForm.value.totalPrice = selectedSeats.length * ticketPrice.value
+  console.log('Updated total price:', invoiceForm.value.totalPrice)
+}
 
 // Methods
 const formatColumnValue = (value, column) => {
@@ -342,7 +336,7 @@ const formatColumnValue = (value, column) => {
     const genderMap = {
       male: 'Nam',
       female: 'Nữ',
-      other: 'Khác'
+      other: 'Khác',
     }
     return genderMap[value] || value
   }
@@ -352,7 +346,7 @@ const formatColumnValue = (value, column) => {
 const formatCurrency = (value) => {
   return new Intl.NumberFormat('vi-VN', {
     style: 'currency',
-    currency: 'VND'
+    currency: 'VND',
   }).format(value)
 }
 
@@ -409,8 +403,8 @@ const openModal = (customer = null) => {
         gender: customer.gender || 'male',
         address: customer.address || '',
         dateOfBirth: customer.dateOfBirth || '',
-        userRole: 'customer'
-      }
+        userRole: 'customer',
+      },
     }
   } else {
     form.value = {
@@ -422,8 +416,8 @@ const openModal = (customer = null) => {
         gender: 'male',
         address: '',
         dateOfBirth: '',
-        userRole: 'customer'
-      }
+        userRole: 'customer',
+      },
     }
   }
   showModal.value = true
@@ -443,8 +437,8 @@ const handleSubmit = async () => {
 
     const customerData = {
       user: {
-        ...form.value.user
-      }
+        ...form.value.user,
+      },
     }
 
     if (currentCustomer.value) {
@@ -480,7 +474,7 @@ const resetInvoiceForm = () => {
     selectedSeats: [],
     totalPrice: 0,
     paymentStatus: 'pending',
-    paymentMethod: 'card'
+    paymentMethod: 'card',
   }
   showSeatSelection.value = false
   bookedSeats.value = []
@@ -527,8 +521,8 @@ const handleTripChange = async () => {
     }
 
     bookedSeats.value = response.tripSeats
-      .filter(seat => seat.status === 'booked')
-      .map(seat => parseInt(seat.seatNumber))
+      .filter((seat) => seat.status === 'booked')
+      .map((seat) => parseInt(seat.seatNumber))
 
     showSeatSelection.value = true
     // Reset selected seats when changing trips
@@ -538,15 +532,6 @@ const handleTripChange = async () => {
     console.error('Error fetching trip seats:', error)
     alert('Có lỗi xảy ra khi tải thông tin ghế!')
   }
-}
-
-const updateTotalPrice = (selectedSeats) => {
-  if (!ticketPrice.value) {
-    console.error('No ticket price available')
-    return
-  }
-  invoiceForm.value.totalPrice = selectedSeats.length * ticketPrice.value
-  console.log('Updated total price:', invoiceForm.value.totalPrice)
 }
 
 const clearSelectedSeats = () => {
@@ -574,14 +559,13 @@ const handleInvoiceSubmit = async () => {
       tripId: invoiceForm.value.tripId,
       selectedSeats: invoiceForm.value.selectedSeats,
       paymentStatus: invoiceForm.value.paymentStatus,
-      paymentMethod: invoiceForm.value.paymentMethod
+      paymentMethod: invoiceForm.value.paymentMethod,
     }
 
     const response = await createInvoice(invoiceData)
     if (response) {
       closeInvoiceModal()
       alert('Tạo hóa đơn thành công!')
-      // Refresh data if needed
     }
   } catch (error) {
     console.error('Error creating invoice:', error)

@@ -4,113 +4,131 @@
 
     <div class="main-grid">
       <!-- Cột 1: Lái xe và các ghế -->
-      <button class="position-box" style="grid-column: 1; grid-row: 1;">Lái Xe</button>
-      <button v-for="seatNum in [1,5,9,13,17,21,25,29,33,37]"
-              :key="seatNum"
-              class="seat-btn"
-              :class="{
-                'selected': modelValue.includes(seatNum),
-                'booked': bookedSeats.includes(seatNum)
-              }"
-              :disabled="bookedSeats.includes(seatNum)"
-              :style="`grid-column: 1; grid-row: ${Math.floor((seatNum-1)/4) + 2}`"
-              @click="handleSeatClick(seatNum)">
+      <button class="position-box" style="grid-column: 1; grid-row: 1">Lái Xe</button>
+      <button
+        v-for="seatNum in [1, 5, 9, 13, 17, 21, 25, 29, 33, 37]"
+        :key="seatNum"
+        class="seat-btn"
+        :class="{
+          selected: modelValue.includes(seatNum),
+          booked: bookedSeats.includes(seatNum),
+        }"
+        :disabled="bookedSeats.includes(seatNum)"
+        :style="`grid-column: 1; grid-row: ${Math.floor((seatNum - 1) / 4) + 2}`"
+        @click="handleSeatClick(seatNum)"
+      >
         {{ seatNum }}
       </button>
-      <button class="seat-btn"
-              :class="{
-                'selected': modelValue.includes(41),
-                'booked': bookedSeats.includes(41)
-              }"
-              :disabled="bookedSeats.includes(41)"
-              style="grid-column: 1; grid-row: 12;"
-              @click="handleSeatClick(41)">
+      <button
+        class="seat-btn"
+        :class="{
+          selected: modelValue.includes(41),
+          booked: bookedSeats.includes(41),
+        }"
+        :disabled="bookedSeats.includes(41)"
+        style="grid-column: 1; grid-row: 12"
+        @click="handleSeatClick(41)"
+      >
         41
       </button>
 
       <!-- Cột 2: Các ghế -->
-      <button v-for="seatNum in [2,6,10,14,18,22,26,30,34,38]"
-              :key="seatNum"
-              class="seat-btn"
-              :class="{
-                'selected': modelValue.includes(seatNum),
-                'booked': bookedSeats.includes(seatNum)
-              }"
-              :disabled="bookedSeats.includes(seatNum)"
-              :style="`grid-column: 2; grid-row: ${Math.floor((seatNum-1)/4) + 2}`"
-              @click="handleSeatClick(seatNum)">
+      <button
+        v-for="seatNum in [2, 6, 10, 14, 18, 22, 26, 30, 34, 38]"
+        :key="seatNum"
+        class="seat-btn"
+        :class="{
+          selected: modelValue.includes(seatNum),
+          booked: bookedSeats.includes(seatNum),
+        }"
+        :disabled="bookedSeats.includes(seatNum)"
+        :style="`grid-column: 2; grid-row: ${Math.floor((seatNum - 1) / 4) + 2}`"
+        @click="handleSeatClick(seatNum)"
+      >
         {{ seatNum }}
       </button>
-      <button class="seat-btn"
-              :class="{
-                'selected': modelValue.includes(42),
-                'booked': bookedSeats.includes(42)
-              }"
-              :disabled="bookedSeats.includes(42)"
-              style="grid-column: 2; grid-row: 12;"
-              @click="handleSeatClick(42)">
+      <button
+        class="seat-btn"
+        :class="{
+          selected: modelValue.includes(42),
+          booked: bookedSeats.includes(42),
+        }"
+        :disabled="bookedSeats.includes(42)"
+        style="grid-column: 2; grid-row: 12"
+        @click="handleSeatClick(42)"
+      >
         42
       </button>
 
       <!-- Cột 3: Phụ xe và ghế 43 -->
-      <button class="position-box" style="grid-column: 3; grid-row: 1;">Phụ Xe</button>
-      <button class="seat-btn"
-              :class="{
-                'selected': modelValue.includes(43),
-                'booked': bookedSeats.includes(43)
-              }"
-              :disabled="bookedSeats.includes(43)"
-              style="grid-column: 3; grid-row: 12;"
-              @click="handleSeatClick(43)">
+      <button class="position-box" style="grid-column: 3; grid-row: 1">Phụ Xe</button>
+      <button
+        class="seat-btn"
+        :class="{
+          selected: modelValue.includes(43),
+          booked: bookedSeats.includes(43),
+        }"
+        :disabled="bookedSeats.includes(43)"
+        style="grid-column: 3; grid-row: 12"
+        @click="handleSeatClick(43)"
+      >
         43
       </button>
 
       <!-- Cột 4: Các ghế -->
-      <button v-for="seatNum in [3,7,11,15,19,23,27,31,35,39]"
-              :key="seatNum"
-              class="seat-btn"
-              :class="{
-                'selected': modelValue.includes(seatNum),
-                'booked': bookedSeats.includes(seatNum)
-              }"
-              :disabled="bookedSeats.includes(seatNum)"
-              :style="`grid-column: 4; grid-row: ${Math.floor((seatNum-1)/4) + 2}`"
-              @click="handleSeatClick(seatNum)">
+      <button
+        v-for="seatNum in [3, 7, 11, 15, 19, 23, 27, 31, 35, 39]"
+        :key="seatNum"
+        class="seat-btn"
+        :class="{
+          selected: modelValue.includes(seatNum),
+          booked: bookedSeats.includes(seatNum),
+        }"
+        :disabled="bookedSeats.includes(seatNum)"
+        :style="`grid-column: 4; grid-row: ${Math.floor((seatNum - 1) / 4) + 2}`"
+        @click="handleSeatClick(seatNum)"
+      >
         {{ seatNum }}
       </button>
-      <button class="seat-btn"
-              :class="{
-                'selected': modelValue.includes(44),
-                'booked': bookedSeats.includes(44)
-              }"
-              :disabled="bookedSeats.includes(44)"
-              style="grid-column: 4; grid-row: 12;"
-              @click="handleSeatClick(44)">
+      <button
+        class="seat-btn"
+        :class="{
+          selected: modelValue.includes(44),
+          booked: bookedSeats.includes(44),
+        }"
+        :disabled="bookedSeats.includes(44)"
+        style="grid-column: 4; grid-row: 12"
+        @click="handleSeatClick(44)"
+      >
         44
       </button>
 
       <!-- Cột 5: Cửa và các ghế -->
-      <button class="position-box" style="grid-column: 5; grid-row: 1;">Cửa</button>
-      <button v-for="seatNum in [4,8,12,16,20,24,28,32,36,40]"
-              :key="seatNum"
-              class="seat-btn"
-              :class="{
-                'selected': modelValue.includes(seatNum),
-                'booked': bookedSeats.includes(seatNum)
-              }"
-              :disabled="bookedSeats.includes(seatNum)"
-              :style="`grid-column: 5; grid-row: ${Math.floor((seatNum-1)/4) + 2}`"
-              @click="handleSeatClick(seatNum)">
+      <button class="position-box" style="grid-column: 5; grid-row: 1">Cửa</button>
+      <button
+        v-for="seatNum in [4, 8, 12, 16, 20, 24, 28, 32, 36, 40]"
+        :key="seatNum"
+        class="seat-btn"
+        :class="{
+          selected: modelValue.includes(seatNum),
+          booked: bookedSeats.includes(seatNum),
+        }"
+        :disabled="bookedSeats.includes(seatNum)"
+        :style="`grid-column: 5; grid-row: ${Math.floor((seatNum - 1) / 4) + 2}`"
+        @click="handleSeatClick(seatNum)"
+      >
         {{ seatNum }}
       </button>
-      <button class="seat-btn"
-              :class="{
-                'selected': modelValue.includes(45),
-                'booked': bookedSeats.includes(45)
-              }"
-              :disabled="bookedSeats.includes(45)"
-              style="grid-column: 5; grid-row: 12;"
-              @click="handleSeatClick(45)">
+      <button
+        class="seat-btn"
+        :class="{
+          selected: modelValue.includes(45),
+          booked: bookedSeats.includes(45),
+        }"
+        :disabled="bookedSeats.includes(45)"
+        style="grid-column: 5; grid-row: 12"
+        @click="handleSeatClick(45)"
+      >
         45
       </button>
     </div>
@@ -137,39 +155,34 @@ const props = defineProps({
   modelValue: {
     type: Array,
     required: true,
-    default: () => []
+    default: () => [],
   },
   bookedSeats: {
     type: Array,
     required: true,
-    default: () => []
-  }
+    default: () => [],
+  },
 })
 
-const emit = defineEmits(['update:modelValue', 'seatSelected'])
+// Chỉ emit update:modelValue
+const emit = defineEmits(['update:modelValue'])
 
 const handleSeatClick = (seatNumber) => {
-  // Nếu ghế đã được đặt, không cho phép chọn
   if (props.bookedSeats.includes(seatNumber)) {
     return
   }
 
-  // Tạo bản sao của mảng ghế đã chọn
   const newSelectedSeats = [...props.modelValue]
   const seatIndex = newSelectedSeats.indexOf(seatNumber)
 
-  // Toggle trạng thái ghế
   if (seatIndex === -1) {
     newSelectedSeats.push(seatNumber)
   } else {
     newSelectedSeats.splice(seatIndex, 1)
   }
 
-  // Emit event để cập nhật v-model
+  // Chỉ emit update:modelValue
   emit('update:modelValue', newSelectedSeats)
-
-  // Emit sự kiện riêng cho việc chọn ghế
-  emit('seatSelected', newSelectedSeats)
 }
 </script>
 
