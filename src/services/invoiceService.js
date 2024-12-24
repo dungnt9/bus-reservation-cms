@@ -7,18 +7,20 @@ export const createInvoice = async (invoiceData) => {
       tripId: invoiceData.tripId,
       selectedSeats: invoiceData.selectedSeats,
       paymentStatus: invoiceData.paymentStatus,
-      paymentMethod: invoiceData.paymentMethod
-    });
-    return response;
+      paymentMethod: invoiceData.paymentMethod,
+    })
+    return response
   } catch (error) {
-    console.error('Error creating invoice:', error.response?.data?.message || error.message);
-    throw error;
+    console.error('Error creating invoice:', error.response?.data?.message || error.message)
+    throw error
   }
-};
+}
 
-export const getAllInvoices = async () => {
+export const getAllInvoices = async (page = 0, size = 10) => {
   try {
-    const response = await api.get('/invoices')
+    const response = await api.get('/invoices', {
+      params: { page, size },
+    })
     return response
   } catch (error) {
     console.error('Error fetching invoices:', error)

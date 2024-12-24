@@ -4,38 +4,38 @@
 
     <table class="table table-striped table-bordered table-hover">
       <thead>
-      <tr>
-        <th class="title-table text-center" v-for="(label, column) in columns" :key="column">
-          {{ label }}
-        </th>
-        <th class="title-table text-center action">Hành động</th>
-      </tr>
-      <tr>
-        <th v-for="(label, column) in columns" :key="column + '-filter'">
-          <input
-            type="text"
-            class="form-control form-control-sm"
-            :placeholder="`Lọc ${label}`"
-            v-model="filters[column]"
-          />
-        </th>
-        <th></th>
-      </tr>
+        <tr>
+          <th class="title-table text-center" v-for="(label, column) in columns" :key="column">
+            {{ label }}
+          </th>
+          <th class="title-table text-center action">Hành động</th>
+        </tr>
+        <tr>
+          <th v-for="(label, column) in columns" :key="column + '-filter'">
+            <input
+              type="text"
+              class="form-control form-control-sm"
+              :placeholder="`Lọc ${label}`"
+              v-model="filters[column]"
+            />
+          </th>
+          <th></th>
+        </tr>
       </thead>
       <tbody>
-      <tr v-for="invoice in filteredInvoices" :key="invoice.invoiceId">
-        <td v-for="(label, column) in columns" :key="column" class="text-center">
-          {{ formatColumnValue(invoice[column], column) }}
-        </td>
-        <td class="action">
-          <button class="btn btn-warning btn-sm me-2" @click="openEditModal(invoice)">
-            <i class="fas fa-edit"></i>
-          </button>
-          <button class="btn btn-danger btn-sm" @click="handleDelete(invoice.invoiceId)">
-            <i class="fas fa-trash-alt"></i>
-          </button>
-        </td>
-      </tr>
+        <tr v-for="invoice in filteredInvoices" :key="invoice.invoiceId">
+          <td v-for="(label, column) in columns" :key="column" class="text-center">
+            {{ formatColumnValue(invoice[column], column) }}
+          </td>
+          <td class="action">
+            <button class="btn btn-warning btn-sm me-2" @click="openEditModal(invoice)">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn btn-danger btn-sm" @click="handleDelete(invoice.invoiceId)">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </td>
+        </tr>
       </tbody>
     </table>
 
@@ -45,54 +45,29 @@
         <div class="row mb-3">
           <div class="col-md-6">
             <label class="form-label">Mã hóa đơn</label>
-            <input
-              type="text"
-              class="form-control"
-              v-model="form.invoiceId"
-              disabled
-            />
+            <input type="text" class="form-control" v-model="form.invoiceId" disabled />
           </div>
           <div class="col-md-6">
             <label class="form-label">Mã chuyến xe</label>
-            <input
-              type="text"
-              class="form-control"
-              v-model="form.tripId"
-              disabled
-            />
+            <input type="text" class="form-control" v-model="form.tripId" disabled />
           </div>
         </div>
 
         <div class="row mb-3">
           <div class="col-md-6">
             <label class="form-label">Khách hàng</label>
-            <input
-              type="text"
-              class="form-control"
-              :value="form.fullName"
-              disabled
-            />
+            <input type="text" class="form-control" :value="form.fullName" disabled />
           </div>
           <div class="col-md-6">
             <label class="form-label">Số điện thoại</label>
-            <input
-              type="text"
-              class="form-control"
-              :value="form.phoneNumber"
-              disabled
-            />
+            <input type="text" class="form-control" :value="form.phoneNumber" disabled />
           </div>
         </div>
 
         <div class="row mb-3">
           <div class="col-md-6">
             <label class="form-label">Ghế đã đặt</label>
-            <input
-              type="text"
-              class="form-control"
-              :value="formatSelectedSeats"
-              disabled
-            />
+            <input type="text" class="form-control" :value="formatSelectedSeats" disabled />
           </div>
           <div class="col-md-6">
             <label class="form-label">Tổng tiền</label>
@@ -108,20 +83,14 @@
         <div class="row">
           <div class="col-md-6">
             <label class="form-label">Trạng thái thanh toán</label>
-            <select
-              class="form-control"
-              v-model="form.paymentStatus"
-            >
+            <select class="form-control" v-model="form.paymentStatus">
               <option value="pending">Chờ thanh toán</option>
               <option value="paid">Đã thanh toán</option>
             </select>
           </div>
           <div class="col-md-6">
             <label class="form-label">Phương thức thanh toán</label>
-            <select
-              class="form-control"
-              v-model="form.paymentMethod"
-            >
+            <select class="form-control" v-model="form.paymentMethod">
               <option value="cash">Tiền mặt</option>
               <option value="card">Thẻ</option>
             </select>
@@ -131,23 +100,29 @@
 
       <template #footer>
         <button class="btn btn-secondary me-2" @click="closeModal">Hủy</button>
-        <button class="btn btn-primary" @click="handleSubmit">
-          Lưu thay đổi
-        </button>
+        <button class="btn btn-primary" @click="handleSubmit">Lưu thay đổi</button>
       </template>
     </CustomModal>
+
+    <Pagination
+      :current-page="currentPage"
+      :total-pages="totalPages"
+      @page-change="handlePageChange"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import CustomModal from '../components/Modal.vue'
-import {
-  getAllInvoices,
-  updateInvoice,
-  deleteInvoice
-} from '../services/invoiceService'
+import { getAllInvoices, updateInvoice, deleteInvoice } from '../services/invoiceService'
+import Pagination from '@/components/Pagination.vue'
 
+// Add pagination state
+const currentPage = ref(0)
+const pageSize = ref(10)
+const totalPages = ref(0)
+const totalElements = ref(0)
 // Reactive state
 const invoices = ref([])
 const showModal = ref(false)
@@ -165,7 +140,7 @@ const form = ref({
   totalPrice: 0,
   paymentStatus: 'pending',
   paymentMethod: 'card',
-  invoiceDate: null
+  invoiceDate: null,
 })
 
 // Columns definition
@@ -180,7 +155,7 @@ const columns = {
   totalPrice: 'Tổng tiền',
   paymentStatus: 'Trạng thái',
   paymentMethod: 'Phương thức',
-  invoiceDate: 'Ngày lập'
+  invoiceDate: 'Ngày lập',
 }
 
 // Computed properties
@@ -221,19 +196,25 @@ const formatColumnValue = (value, column) => {
 const formatCurrency = (value) => {
   return new Intl.NumberFormat('vi-VN', {
     style: 'currency',
-    currency: 'VND'
+    currency: 'VND',
   }).format(value)
 }
 
 const fetchInvoices = async () => {
   try {
-    const response = await getAllInvoices()
-    console.log('Fetched invoices:', response)
-    invoices.value = response
+    const response = await getAllInvoices(currentPage.value, pageSize.value)
+    invoices.value = response.content
+    totalPages.value = response.totalPages
+    totalElements.value = response.totalElements
   } catch (error) {
     console.error('Error fetching invoices:', error)
     alert('Có lỗi xảy ra khi tải danh sách hóa đơn!')
   }
+}
+
+const handlePageChange = async (page) => {
+  currentPage.value = page
+  await fetchInvoices()
 }
 
 const openEditModal = (invoice) => {
@@ -255,7 +236,7 @@ const closeModal = () => {
     totalPrice: 0,
     paymentStatus: 'pending',
     paymentMethod: 'card',
-    invoiceDate: null
+    invoiceDate: null,
   }
 }
 
@@ -264,7 +245,7 @@ const handleSubmit = async () => {
     console.log('Submitting updated invoice:', form.value)
     await updateInvoice(form.value.invoiceId, {
       paymentStatus: form.value.paymentStatus,
-      paymentMethod: form.value.paymentMethod
+      paymentMethod: form.value.paymentMethod,
     })
     await fetchInvoices()
     closeModal()
