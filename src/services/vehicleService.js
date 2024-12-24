@@ -13,10 +13,11 @@ export const createVehicle = async (vehicle) => {
 }
 
 // Get all vehicles
-export const getAllVehicles = async () => {
+export const getAllVehicles = async (page = 0, size = 10) => {
   try {
-    const response = await api.get('/vehicles')
-    console.log(response)
+    const response = await api.get('/vehicles', {
+      params: { page, size },
+    })
     return response
   } catch (error) {
     console.error('Error fetching vehicles:', error)

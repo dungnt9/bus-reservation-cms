@@ -11,38 +11,38 @@
 
     <table class="table table-striped table-bordered table-hover">
       <thead>
-      <tr>
-        <th class="title-table text-center" v-for="(label, column) in columns" :key="column">
-          {{ label }}
-        </th>
-        <th class="title-table text-center action">Hành động</th>
-      </tr>
-      <tr>
-        <th v-for="(label, column) in columns" :key="column + '-filter'">
-          <input
-            type="text"
-            class="form-control form-control-sm"
-            :placeholder="`Lọc ${label}`"
-            v-model="filters[column]"
-          />
-        </th>
-        <th></th>
-      </tr>
+        <tr>
+          <th class="title-table text-center" v-for="(label, column) in columns" :key="column">
+            {{ label }}
+          </th>
+          <th class="title-table text-center action">Hành động</th>
+        </tr>
+        <tr>
+          <th v-for="(label, column) in columns" :key="column + '-filter'">
+            <input
+              type="text"
+              class="form-control form-control-sm"
+              :placeholder="`Lọc ${label}`"
+              v-model="filters[column]"
+            />
+          </th>
+          <th></th>
+        </tr>
       </thead>
       <tbody>
-      <tr v-for="route in filteredRoutes" :key="route.routeId">
-        <td v-for="(label, column) in columns" :key="column" class="text-center">
-          {{ formatColumnValue(route[column], column) }}
-        </td>
-        <td class="action">
-          <button class="btn btn-warning btn-sm me-2" @click="openModal(route)">
-            <i class="fas fa-edit"></i>
-          </button>
-          <button class="btn btn-danger btn-sm" @click="handleDelete(route.routeId)">
-            <i class="fas fa-trash-alt"></i>
-          </button>
-        </td>
-      </tr>
+        <tr v-for="route in filteredRoutes" :key="route.routeId">
+          <td v-for="(label, column) in columns" :key="column" class="text-center">
+            {{ formatColumnValue(route[column], column) }}
+          </td>
+          <td class="action">
+            <button class="btn btn-warning btn-sm me-2" @click="openModal(route)">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn btn-danger btn-sm" @click="handleDelete(route.routeId)">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </td>
+        </tr>
       </tbody>
     </table>
 
@@ -96,7 +96,9 @@
             </div>
           </div>
           <div class="col-md-6 mb-3">
-            <label class="form-label">Thời gian ước tính (phút)<span class="text-danger">*</span></label>
+            <label class="form-label"
+              >Thời gian ước tính (phút)<span class="text-danger">*</span></label
+            >
             <input
               type="number"
               class="form-control"
@@ -135,6 +137,12 @@
         </button>
       </template>
     </CustomModal>
+
+    <Pagination
+      :current-page="currentPage"
+      :total-pages="totalPages"
+      @page-change="handlePageChange"
+    />
   </div>
 </template>
 
@@ -142,7 +150,12 @@
 import { ref, onMounted, computed } from 'vue'
 import { getAllRoutes, createRoute, updateRoute, deleteRoute } from '../services/routeService'
 import CustomModal from '../components/Modal.vue'
+import Pagination from '@/components/Pagination.vue'
 
+// Add pagination state
+const currentPage = ref(0)
+const pageSize = ref(10)
+const totalPages = ref(0)
 // Reactive state
 const routes = ref([])
 const showModal = ref(false)
@@ -157,7 +170,7 @@ const columns = {
   ticketPrice: 'Giá vé',
   distance: 'Khoảng cách (km)',
   estimatedDuration: 'Thời gian ước tính (phút)',
-  routeStatus: 'Trạng thái'
+  routeStatus: 'Trạng thái',
 }
 
 // Initial form state
@@ -166,7 +179,7 @@ const form = ref({
   ticketPrice: null,
   distance: null,
   estimatedDuration: null,
-  routeStatus: 'active'
+  routeStatus: 'active',
 })
 
 const validateForm = () => {
@@ -209,7 +222,7 @@ const formatColumnValue = (value, column) => {
   if (column === 'routeStatus') {
     const statusMap = {
       active: 'Hoạt động',
-      inactive: 'Không hoạt động'
+      inactive: 'Không hoạt động',
     }
     return statusMap[value] || value
   }
@@ -239,11 +252,17 @@ const filteredRoutes = computed(() => {
 // Fetch routes
 const fetchRoutes = async () => {
   try {
-    const response = await getAllRoutes()
-    routes.value = response
+    const response = await getAllRoutes(currentPage.value, pageSize.value)
+    routes.value = response.content
+    totalPages.value = response.totalPages
   } catch (error) {
     console.error('Error fetching routes:', error)
   }
+}
+
+const handlePageChange = async (page) => {
+  currentPage.value = page
+  await fetchRoutes()
 }
 
 // Modal methods
@@ -257,7 +276,7 @@ const openModal = (route = null) => {
       ticketPrice: route.ticketPrice,
       distance: route.distance,
       estimatedDuration: route.estimatedDuration,
-      routeStatus: route.routeStatus
+      routeStatus: route.routeStatus,
     }
   } else {
     form.value = {
@@ -265,7 +284,7 @@ const openModal = (route = null) => {
       ticketPrice: null,
       distance: null,
       estimatedDuration: null,
-      routeStatus: 'active'
+      routeStatus: 'active',
     }
   }
   showModal.value = true
@@ -280,7 +299,7 @@ const closeModal = () => {
     ticketPrice: null,
     distance: null,
     estimatedDuration: null,
-    routeStatus: 'active'
+    routeStatus: 'active',
   }
 }
 
@@ -296,7 +315,7 @@ const handleSubmit = async () => {
       ticketPrice: parseInt(form.value.ticketPrice),
       distance: parseFloat(form.value.distance),
       estimatedDuration: parseInt(form.value.estimatedDuration),
-      routeStatus: form.value.routeStatus
+      routeStatus: form.value.routeStatus,
     }
 
     if (currentRoute.value) {

@@ -102,6 +102,12 @@
         </button>
       </template>
     </CustomModal>
+
+    <Pagination
+      :current-page="currentPage"
+      :total-pages="totalPages"
+      @page-change="handlePageChange"
+    />
   </div>
 </template>
 
@@ -114,6 +120,12 @@ import {
   deleteVehicle,
 } from '../services/vehicleService'
 import CustomModal from '../components/Modal.vue'
+import Pagination from '@/components/Pagination.vue'
+
+// Add pagination state
+const currentPage = ref(0)
+const pageSize = ref(10)
+const totalPages = ref(0)
 
 // Reactive state
 const vehicles = ref([])
@@ -187,11 +199,17 @@ const filteredVehicles = computed(() => {
 // Fetch vehicles
 const fetchVehicles = async () => {
   try {
-    const response = await getAllVehicles()
-    vehicles.value = response
+    const response = await getAllVehicles(currentPage.value, pageSize.value)
+    vehicles.value = response.content
+    totalPages.value = response.totalPages
   } catch (error) {
     console.error('Error fetching vehicles:', error)
   }
+}
+
+const handlePageChange = async (page) => {
+  currentPage.value = page
+  await fetchVehicles()
 }
 
 // Modal methods

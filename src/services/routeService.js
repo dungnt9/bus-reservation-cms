@@ -13,9 +13,11 @@ export const createRoute = async (route) => {
 }
 
 // Get all routes
-export const getAllRoutes = async () => {
+export const getAllRoutes = async (page = 0, size = 10) => {
   try {
-    const response = await api.get('/routes')
+    const response = await api.get('/routes', {
+      params: { page, size },
+    })
     return response
   } catch (error) {
     console.error('Error fetching routes:', error)
