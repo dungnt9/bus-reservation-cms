@@ -11,45 +11,42 @@
 
     <table class="table table-striped table-bordered table-hover">
       <thead>
-      <tr>
-        <th class="title-table text-center" v-for="(label, column) in columns" :key="column">
-          {{ label }}
-        </th>
-        <th class="title-table text-center action">Hành động</th>
-      </tr>
-      <tr>
-        <th v-for="(label, column) in columns" :key="column + '-filter'">
-          <input
-            type="text"
-            class="form-control form-control-sm"
-            :placeholder="`Lọc ${label}`"
-            v-model="filters[column]"
-          />
-        </th>
-        <th></th>
-      </tr>
+        <tr>
+          <th class="title-table text-center" v-for="(label, column) in columns" :key="column">
+            {{ label }}
+          </th>
+          <th class="title-table text-center action">Hành động</th>
+        </tr>
+        <tr>
+          <th v-for="(label, column) in columns" :key="column + '-filter'">
+            <input
+              type="text"
+              class="form-control form-control-sm"
+              :placeholder="`Lọc ${label}`"
+              v-model="filters[column]"
+            />
+          </th>
+          <th></th>
+        </tr>
       </thead>
       <tbody>
-      <tr v-for="driver in filteredDrivers" :key="driver.driverId">
-        <td v-for="(label, column) in columns" :key="column" class="text-center">
-          {{ formatColumnValue(driver[column], column) }}
-        </td>
-        <td class="action">
-          <button class="btn btn-warning btn-sm me-2" @click="openModal(driver)">
-            <i class="fas fa-edit"></i>
-          </button>
-          <button class="btn btn-danger btn-sm" @click="handleDelete(driver.driverId)">
-            <i class="fas fa-trash-alt"></i>
-          </button>
-        </td>
-      </tr>
+        <tr v-for="driver in filteredDrivers" :key="driver.driverId">
+          <td v-for="(label, column) in columns" :key="column" class="text-center">
+            {{ formatColumnValue(driver[column], column) }}
+          </td>
+          <td class="action">
+            <button class="btn btn-warning btn-sm me-2" @click="openModal(driver)">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn btn-danger btn-sm" @click="handleDelete(driver.driverId)">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </td>
+        </tr>
       </tbody>
     </table>
 
-    <CustomModal
-      v-model="showModal"
-      :title="currentDriver ? 'Chỉnh sửa tài xế' : 'Thêm tài xế'"
-    >
+    <CustomModal v-model="showModal" :title="currentDriver ? 'Chỉnh sửa tài xế' : 'Thêm tài xế'">
       <form @submit.prevent="handleSubmit" novalidate>
         <div class="row">
           <div class="col-md-6 mb-3">
@@ -161,7 +158,9 @@
 
         <div class="row">
           <div class="col-md-6 mb-3">
-            <label class="form-label">Ngày hết hạn bằng lái<span class="text-danger">*</span></label>
+            <label class="form-label"
+              >Ngày hết hạn bằng lái<span class="text-danger">*</span></label
+            >
             <input
               type="date"
               class="form-control"
@@ -190,6 +189,12 @@
         </button>
       </template>
     </CustomModal>
+
+    <Pagination
+      :current-page="currentPage"
+      :total-pages="totalPages"
+      @page-change="handlePageChange"
+    />
   </div>
 </template>
 
@@ -198,7 +203,13 @@ import { ref, onMounted, computed } from 'vue'
 import { getAllDrivers, createDriver, updateDriver, deleteDriver } from '../services/driverService'
 import CustomModal from '../components/Modal.vue'
 import { validEmail, validPhone, validName, validAddress } from '../utils/validators'
+import Pagination from '@/components/Pagination.vue'
 
+// Add pagination state
+const currentPage = ref(0)
+const pageSize = ref(10)
+const totalPages = ref(0)
+const totalElements = ref(0)
 // Reactive state
 const drivers = ref([])
 const showModal = ref(false)
@@ -220,7 +231,7 @@ const columns = {
   licenseNumber: 'Số bằng lái',
   licenseClass: 'Hạng bằng',
   licenseExpiry: 'Ngày hết hạn bằng lái',
-  driverStatus: 'Trạng thái'
+  driverStatus: 'Trạng thái',
 }
 
 // Initial form state
@@ -233,12 +244,12 @@ const form = ref({
     gender: 'male',
     address: '',
     dateOfBirth: '',
-    userRole: 'driver'
+    userRole: 'driver',
   },
   licenseNumber: '',
   licenseClass: '',
   licenseExpiry: '',
-  driverStatus: 'available'
+  driverStatus: 'available',
 })
 
 const validateForm = () => {
@@ -299,7 +310,7 @@ const formatColumnValue = (value, column) => {
     const genderMap = {
       male: 'Nam',
       female: 'Nữ',
-      other: 'Khác'
+      other: 'Khác',
     }
     return genderMap[value] || value
   }
@@ -308,7 +319,7 @@ const formatColumnValue = (value, column) => {
     const statusMap = {
       available: 'Sẵn sàng',
       on_trip: 'Đang trong chuyến',
-      off_duty: 'Nghỉ làm'
+      off_duty: 'Nghỉ làm',
     }
     return statusMap[value] || value
   }
@@ -330,11 +341,18 @@ const filteredDrivers = computed(() => {
 // Fetch drivers
 const fetchDrivers = async () => {
   try {
-    const response = await getAllDrivers()
-    drivers.value = response
+    const response = await getAllDrivers(currentPage.value, pageSize.value)
+    drivers.value = response.content
+    totalPages.value = response.totalPages
+    totalElements.value = response.totalElements
   } catch (error) {
     console.error('Error fetching drivers:', error)
   }
+}
+
+const handlePageChange = async (page) => {
+  currentPage.value = page
+  await fetchDrivers()
 }
 
 // Modal methods
@@ -352,12 +370,12 @@ const openModal = (driver = null) => {
         gender: driver.gender,
         address: driver.address,
         dateOfBirth: driver.dateOfBirth,
-        userRole: 'driver'
+        userRole: 'driver',
       },
       licenseNumber: driver.licenseNumber,
       licenseClass: driver.licenseClass,
       licenseExpiry: driver.licenseExpiry,
-      driverStatus: driver.driverStatus
+      driverStatus: driver.driverStatus,
     }
   } else {
     form.value = {
@@ -369,12 +387,12 @@ const openModal = (driver = null) => {
         gender: 'male',
         address: '',
         dateOfBirth: '',
-        userRole: 'driver'
+        userRole: 'driver',
       },
       licenseNumber: '',
       licenseClass: '',
       licenseExpiry: '',
-      driverStatus: 'available'
+      driverStatus: 'available',
     }
   }
   showModal.value = true
@@ -393,12 +411,12 @@ const closeModal = () => {
       gender: 'male',
       address: '',
       dateOfBirth: '',
-      userRole: 'driver'
+      userRole: 'driver',
     },
     licenseNumber: '',
     licenseClass: '',
     licenseExpiry: '',
-    driverStatus: 'available'
+    driverStatus: 'available',
   }
 }
 
@@ -412,12 +430,12 @@ const handleSubmit = async () => {
     const driverData = {
       user: {
         ...form.value.user,
-        userId: currentDriver.value?.userId
+        userId: currentDriver.value?.userId,
       },
       licenseNumber: form.value.licenseNumber,
       licenseClass: form.value.licenseClass,
       licenseExpiry: form.value.licenseExpiry,
-      driverStatus: form.value.driverStatus
+      driverStatus: form.value.driverStatus,
     }
 
     if (currentDriver.value) {

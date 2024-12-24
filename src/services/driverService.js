@@ -13,10 +13,11 @@ export const createDriver = async (driver) => {
 }
 
 // Get all drivers
-export const getAllDrivers = async () => {
+export const getAllDrivers = async (page = 0, size = 10) => {
   try {
-    const response = await api.get('/drivers') // Using api instance to make a GET request
-    console.log('response.data:', response)
+    const response = await api.get('/drivers', {
+      params: { page, size },
+    })
     return response
   } catch (error) {
     console.error('Error fetching drivers:', error)

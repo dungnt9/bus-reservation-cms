@@ -13,10 +13,11 @@ export const createAssistant = async (assistant) => {
 }
 
 // Get all assistants
-export const getAllAssistants = async () => {
+export const getAllAssistants = async (page = 0, size = 10) => {
   try {
-    const response = await api.get('/assistants')
-    console.log('response.data:', response)
+    const response = await api.get('/assistants', {
+      params: { page, size },
+    })
     return response
   } catch (error) {
     console.error('Error fetching assistants:', error)

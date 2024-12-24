@@ -13,10 +13,11 @@ export const createCustomer = async (customer) => {
 }
 
 // Get all customers
-export const getAllCustomers = async () => {
+export const getAllCustomers = async (page = 0, size = 10) => {
   try {
-    const response = await api.get('/customers')
-    console.log('response.data:', response)
+    const response = await api.get('/customers', {
+      params: { page, size },
+    })
     return response
   } catch (error) {
     console.error('Error fetching customers:', error)

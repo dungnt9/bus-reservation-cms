@@ -220,6 +220,12 @@
         </button>
       </template>
     </CustomModal>
+
+    <Pagination
+      :current-page="currentPage"
+      :total-pages="totalPages"
+      @page-change="handlePageChange"
+    />
   </div>
 </template>
 
@@ -235,6 +241,7 @@ import {
 } from '../services/customerService'
 import { createInvoice, getAvailableTrips, getTripSeats } from '../services/invoiceService'
 import { validEmail, validPhone, validName, validAddress } from '../utils/validators'
+import Pagination from '@/components/Pagination.vue'
 
 // State Management
 const customers = ref([])
@@ -251,6 +258,10 @@ const bookedSeats = ref([])
 const showSeatSelection = ref(false)
 const tripDetails = ref(null)
 const ticketPrice = ref(0)
+
+const currentPage = ref(0)
+const pageSize = ref(10)
+const totalPages = ref(0)
 
 // Form States
 const form = ref({
@@ -576,12 +587,18 @@ const handleInvoiceSubmit = async () => {
 // Fetch customers on mount
 const fetchCustomers = async () => {
   try {
-    const response = await getAllCustomers()
-    customers.value = response
+    const response = await getAllCustomers(currentPage.value, pageSize.value)
+    customers.value = response.content
+    totalPages.value = response.totalPages
   } catch (error) {
     console.error('Error fetching customers:', error)
     alert('Có lỗi xảy ra khi tải danh sách khách hàng!')
   }
+}
+
+const handlePageChange = async (page) => {
+  currentPage.value = page
+  await fetchCustomers()
 }
 
 onMounted(() => {

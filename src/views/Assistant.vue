@@ -11,45 +11,42 @@
 
     <table class="table table-striped table-bordered table-hover">
       <thead>
-      <tr>
-        <th class="title-table text-center" v-for="(label, column) in columns" :key="column">
-          {{ label }}
-        </th>
-        <th class="title-table text-center action">Hành động</th>
-      </tr>
-      <tr>
-        <th v-for="(label, column) in columns" :key="column + '-filter'">
-          <input
-            type="text"
-            class="form-control form-control-sm"
-            :placeholder="`Lọc ${label}`"
-            v-model="filters[column]"
-          />
-        </th>
-        <th></th>
-      </tr>
+        <tr>
+          <th class="title-table text-center" v-for="(label, column) in columns" :key="column">
+            {{ label }}
+          </th>
+          <th class="title-table text-center action">Hành động</th>
+        </tr>
+        <tr>
+          <th v-for="(label, column) in columns" :key="column + '-filter'">
+            <input
+              type="text"
+              class="form-control form-control-sm"
+              :placeholder="`Lọc ${label}`"
+              v-model="filters[column]"
+            />
+          </th>
+          <th></th>
+        </tr>
       </thead>
       <tbody>
-      <tr v-for="assistant in filteredAssistants" :key="assistant.assistantId">
-        <td v-for="(label, column) in columns" :key="column" class="text-center">
-          {{ formatColumnValue(assistant[column], column) }}
-        </td>
-        <td class="action">
-          <button class="btn btn-warning btn-sm me-2" @click="openModal(assistant)">
-            <i class="fas fa-edit"></i>
-          </button>
-          <button class="btn btn-danger btn-sm" @click="handleDelete(assistant.assistantId)">
-            <i class="fas fa-trash-alt"></i>
-          </button>
-        </td>
-      </tr>
+        <tr v-for="assistant in filteredAssistants" :key="assistant.assistantId">
+          <td v-for="(label, column) in columns" :key="column" class="text-center">
+            {{ formatColumnValue(assistant[column], column) }}
+          </td>
+          <td class="action">
+            <button class="btn btn-warning btn-sm me-2" @click="openModal(assistant)">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn btn-danger btn-sm" @click="handleDelete(assistant.assistantId)">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          </td>
+        </tr>
       </tbody>
     </table>
 
-    <CustomModal
-      v-model="showModal"
-      :title="currentAssistant ? 'Chỉnh sửa phụ xe' : 'Thêm phụ xe'"
-    >
+    <CustomModal v-model="showModal" :title="currentAssistant ? 'Chỉnh sửa phụ xe' : 'Thêm phụ xe'">
       <form @submit.prevent="handleSubmit" novalidate>
         <div class="row">
           <div class="col-md-6 mb-3">
@@ -144,14 +141,25 @@
         </button>
       </template>
     </CustomModal>
+    <Pagination
+      :current-page="currentPage"
+      :total-pages="totalPages"
+      @page-change="handlePageChange"
+    />
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import { getAllAssistants, createAssistant, updateAssistant, deleteAssistant } from '../services/assistantService'
+import {
+  getAllAssistants,
+  createAssistant,
+  updateAssistant,
+  deleteAssistant,
+} from '../services/assistantService'
 import CustomModal from '../components/Modal.vue'
 import { validEmail, validPhone, validName, validAddress } from '../utils/validators'
+import Pagination from '../components/Pagination.vue'
 
 // Reactive state
 const assistants = ref([])
@@ -159,6 +167,11 @@ const showModal = ref(false)
 const currentAssistant = ref(null)
 const filters = ref({})
 const validationErrors = ref({})
+
+const currentPage = ref(0)
+const pageSize = ref(10)
+const totalPages = ref(0)
+const totalElements = ref(0)
 
 // Columns definition
 const columns = {
@@ -171,7 +184,7 @@ const columns = {
   gender: 'Giới tính',
   address: 'Địa chỉ',
   dateOfBirth: 'Ngày sinh',
-  assistantStatus: 'Trạng thái'
+  assistantStatus: 'Trạng thái',
 }
 
 // Initial form state
@@ -184,9 +197,9 @@ const form = ref({
     gender: 'male',
     address: '',
     dateOfBirth: '',
-    userRole: 'assistant'
+    userRole: 'assistant',
   },
-  assistantStatus: 'available'
+  assistantStatus: 'available',
 })
 
 const validateForm = () => {
@@ -232,7 +245,7 @@ const formatColumnValue = (value, column) => {
     const genderMap = {
       male: 'Nam',
       female: 'Nữ',
-      other: 'Khác'
+      other: 'Khác',
     }
     return genderMap[value] || value
   }
@@ -241,7 +254,7 @@ const formatColumnValue = (value, column) => {
     const statusMap = {
       available: 'Sẵn sàng',
       on_trip: 'Đang trong chuyến',
-      off_duty: 'Nghỉ làm'
+      off_duty: 'Nghỉ làm',
     }
     return statusMap[value] || value
   }
@@ -263,11 +276,18 @@ const filteredAssistants = computed(() => {
 // Fetch assistants
 const fetchAssistants = async () => {
   try {
-    const response = await getAllAssistants()
-    assistants.value = response
+    const response = await getAllAssistants(currentPage.value, pageSize.value)
+    assistants.value = response.content
+    totalPages.value = response.totalPages
+    totalElements.value = response.totalElements
   } catch (error) {
     console.error('Error fetching assistants:', error)
   }
+}
+
+const handlePageChange = async (page) => {
+  currentPage.value = page
+  await fetchAssistants()
 }
 
 // Modal methods
@@ -285,9 +305,9 @@ const openModal = (assistant = null) => {
         gender: assistant.gender,
         address: assistant.address,
         dateOfBirth: assistant.dateOfBirth,
-        userRole: 'assistant'
+        userRole: 'assistant',
       },
-      assistantStatus: assistant.assistantStatus
+      assistantStatus: assistant.assistantStatus,
     }
   } else {
     form.value = {
@@ -299,9 +319,9 @@ const openModal = (assistant = null) => {
         gender: 'male',
         address: '',
         dateOfBirth: '',
-        userRole: 'assistant'
+        userRole: 'assistant',
       },
-      assistantStatus: 'available'
+      assistantStatus: 'available',
     }
   }
   showModal.value = true
@@ -320,9 +340,9 @@ const closeModal = () => {
       gender: 'male',
       address: '',
       dateOfBirth: '',
-      userRole: 'assistant'
+      userRole: 'assistant',
     },
-    assistantStatus: 'available'
+    assistantStatus: 'available',
   }
 }
 
@@ -336,9 +356,9 @@ const handleSubmit = async () => {
     const assistantData = {
       user: {
         ...form.value.user,
-        userId: currentAssistant.value?.userId
+        userId: currentAssistant.value?.userId,
       },
-      assistantStatus: form.value.assistantStatus
+      assistantStatus: form.value.assistantStatus,
     }
 
     if (currentAssistant.value) {
