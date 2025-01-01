@@ -20,12 +20,23 @@
         </tr>
         <tr>
           <th v-for="(label, column) in columns" :key="column + '-filter'">
-            <input
-              type="text"
-              class="form-control form-control-sm"
-              :placeholder="`Lọc ${label}`"
-              v-model="filters[column]"
-            />
+            <template v-if="column === 'dateOfBirth'">
+              <input
+                type="date"
+                class="form-control form-control-sm"
+                :placeholder="`Lọc ${label}`"
+                v-model="displayFilters[column]"
+                :max="getCurrentDate()"
+              />
+            </template>
+            <template v-else>
+              <input
+                type="text"
+                class="form-control form-control-sm"
+                :placeholder="`Lọc ${label}`"
+                v-model="displayFilters[column]"
+              />
+            </template>
           </th>
           <th></th>
         </tr>
@@ -227,7 +238,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import CustomModal from '../components/Modal.vue'
 import Seat from '../components/Seat.vue'
 import { createCustomer, getAllCustomers, updateCustomer } from '../services/customerService'
@@ -254,6 +265,7 @@ const ticketPrice = ref(0)
 const currentPage = ref(0)
 const pageSize = ref(10)
 const totalPages = ref(0)
+const displayFilters = ref({})
 
 // Form States
 const form = ref({
@@ -287,6 +299,19 @@ const columns = {
   gender: 'Giới tính',
   address: 'Địa chỉ',
   dateOfBirth: 'Ngày sinh',
+}
+
+const getCurrentDate = () => {
+  const today = new Date()
+  return today.toISOString().split('T')[0]
+}
+
+const debounce = (fn, delay) => {
+  let timeoutId
+  return (...args) => {
+    clearTimeout(timeoutId)
+    timeoutId = setTimeout(() => fn.apply(this, args), delay)
+  }
 }
 
 // Computed Properties
@@ -567,24 +592,56 @@ const handleInvoiceSubmit = async () => {
 // Fetch customers on mount
 const fetchCustomers = async () => {
   try {
-    const response = await getAllCustomers(currentPage.value, pageSize.value)
+    const response = await getAllCustomers(currentPage.value, pageSize.value, filters.value)
     customers.value = response.content
     totalPages.value = response.totalPages
   } catch (error) {
     console.error('Error fetching customers:', error)
-    alert('Có lỗi xảy ra khi tải danh sách khách hàng!')
   }
 }
+
+const debouncedFetch = debounce(fetchCustomers, 300)
+
+// Watch filters
+watch(
+  displayFilters,
+  (newDisplayFilters) => {
+    const apiFilters = { ...newDisplayFilters }
+
+    // Handle gender conversion
+    if (apiFilters.gender) {
+      const genderMap = {
+        nam: 'male',
+        nữ: 'female',
+        khác: 'other',
+      }
+      apiFilters.gender = genderMap[apiFilters.gender.toLowerCase()] || apiFilters.gender
+    }
+
+    // Handle date conversion
+    if (apiFilters.dateOfBirth) {
+      try {
+        const date = new Date(apiFilters.dateOfBirth)
+        apiFilters.dateOfBirth = date.toISOString().split('T')[0]
+      } catch (error) {
+        console.error('Invalid date:', error)
+        delete apiFilters.dateOfBirth
+      }
+    }
+
+    filters.value = apiFilters
+    currentPage.value = 0
+    debouncedFetch()
+  },
+  { deep: true },
+)
 
 const handlePageChange = async (page) => {
   currentPage.value = page
   await fetchCustomers()
 }
 
-onMounted(() => {
-  console.log('Customer component mounted')
-  fetchCustomers()
-})
+onMounted(fetchCustomers)
 </script>
 
 <style scoped>
