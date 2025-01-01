@@ -19,12 +19,31 @@
         </tr>
         <tr>
           <th v-for="(label, column) in columns" :key="column + '-filter'">
-            <input
-              type="text"
-              class="form-control form-control-sm"
-              :placeholder="`Lọc ${label}`"
-              v-model="filters[column]"
-            />
+            <template v-if="column === 'dateOfBirth'">
+              <input
+                type="date"
+                class="form-control form-control-sm"
+                :placeholder="`Lọc ${label}`"
+                v-model="displayFilters[column]"
+                :max="getCurrentDate()"
+              />
+            </template>
+            <template v-else-if="column === 'assistantStatus'">
+              <select class="form-control form-control-sm" v-model="displayFilters[column]">
+                <option value="">Tất cả</option>
+                <option value="sẵn sàng">Sẵn sàng</option>
+                <option value="đang trong chuyến">Đang trong chuyến</option>
+                <option value="nghỉ làm">Nghỉ làm</option>
+              </select>
+            </template>
+            <template v-else>
+              <input
+                type="text"
+                class="form-control form-control-sm"
+                :placeholder="`Lọc ${label}`"
+                v-model="displayFilters[column]"
+              />
+            </template>
           </th>
           <th></th>
         </tr>
@@ -147,7 +166,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { getAllAssistants, createAssistant, updateAssistant } from '../services/assistantService'
 import CustomModal from '../components/Modal.vue'
 import { validEmail, validPhone, validName, validAddress } from '../utils/validators'
@@ -164,6 +183,7 @@ const currentPage = ref(0)
 const pageSize = ref(10)
 const totalPages = ref(0)
 const totalElements = ref(0)
+const displayFilters = ref({})
 
 // Columns definition
 const columns = {
@@ -193,6 +213,19 @@ const form = ref({
   },
   assistantStatus: 'available',
 })
+
+const getCurrentDate = () => {
+  const today = new Date()
+  return today.toISOString().split('T')[0]
+}
+
+const debounce = (fn, delay) => {
+  let timeoutId
+  return (...args) => {
+    clearTimeout(timeoutId)
+    timeoutId = setTimeout(() => fn.apply(this, args), delay)
+  }
+}
 
 const validateForm = () => {
   validationErrors.value = {}
@@ -268,14 +301,57 @@ const filteredAssistants = computed(() => {
 // Fetch assistants
 const fetchAssistants = async () => {
   try {
-    const response = await getAllAssistants(currentPage.value, pageSize.value)
+    const response = await getAllAssistants(currentPage.value, pageSize.value, filters.value)
     assistants.value = response.content
     totalPages.value = response.totalPages
-    totalElements.value = response.totalElements
   } catch (error) {
     console.error('Error fetching assistants:', error)
   }
 }
+
+const debouncedFetch = debounce(fetchAssistants, 300)
+
+// Add watch for filters
+watch(
+  displayFilters,
+  (newDisplayFilters) => {
+    const apiFilters = { ...newDisplayFilters }
+
+    if (apiFilters.gender) {
+      const genderMap = {
+        nam: 'male',
+        nữ: 'female',
+        khác: 'other',
+      }
+      apiFilters.gender = genderMap[apiFilters.gender.toLowerCase()] || apiFilters.gender
+    }
+
+    if (apiFilters.assistantStatus) {
+      const statusMap = {
+        'sẵn sàng': 'available',
+        'đang trong chuyến': 'on_trip',
+        'nghỉ làm': 'off_duty',
+      }
+      apiFilters.assistantStatus =
+        statusMap[apiFilters.assistantStatus.toLowerCase()] || apiFilters.assistantStatus
+    }
+
+    if (apiFilters.dateOfBirth) {
+      try {
+        const date = new Date(apiFilters.dateOfBirth)
+        apiFilters.dateOfBirth = date.toISOString().split('T')[0]
+      } catch (error) {
+        console.error('Invalid date:', error)
+        delete apiFilters.dateOfBirth
+      }
+    }
+
+    filters.value = apiFilters
+    currentPage.value = 0
+    debouncedFetch()
+  },
+  { deep: true },
+)
 
 const handlePageChange = async (page) => {
   currentPage.value = page

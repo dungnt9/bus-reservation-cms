@@ -13,11 +13,34 @@ export const createAssistant = async (assistant) => {
 }
 
 // Get all assistants
-export const getAllAssistants = async (page = 0, size = 10) => {
+export const getAllAssistants = async (page = 0, size = 10, filters = {}) => {
   try {
-    const response = await api.get('/assistants', {
-      params: { page, size },
-    })
+    if (filters.gender) {
+      const genderMap = {
+        nam: 'male',
+        nữ: 'female',
+        khác: 'other',
+      }
+      filters.gender = genderMap[filters.gender.toLowerCase()] || filters.gender
+    }
+
+    if (filters.assistantStatus) {
+      const statusMap = {
+        'sẵn sàng': 'available',
+        'đang trong chuyến': 'on_trip',
+        'nghỉ làm': 'off_duty',
+      }
+      filters.assistantStatus =
+        statusMap[filters.assistantStatus.toLowerCase()] || filters.assistantStatus
+    }
+
+    const params = {
+      page,
+      size,
+      ...filters,
+    }
+
+    const response = await api.get('/assistants', { params })
     return response
   } catch (error) {
     console.error('Error fetching assistants:', error)
