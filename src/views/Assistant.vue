@@ -28,6 +28,14 @@
                 :max="getCurrentDate()"
               />
             </template>
+            <template v-else-if="column === 'gender'">
+              <select class="form-control form-control-sm" v-model="displayFilters[column]">
+                <option value="">Tất cả</option>
+                <option value="nam">Nam</option>
+                <option value="nữ">Nữ</option>
+                <option value="khác">Khác</option>
+              </select>
+            </template>
             <template v-else-if="column === 'assistantStatus'">
               <select class="form-control form-control-sm" v-model="displayFilters[column]">
                 <option value="">Tất cả</option>

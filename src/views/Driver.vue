@@ -19,12 +19,51 @@
         </tr>
         <tr>
           <th v-for="(label, column) in columns" :key="column + '-filter'">
-            <input
-              type="text"
-              class="form-control form-control-sm"
-              :placeholder="`Lọc ${label}`"
-              v-model="filters[column]"
-            />
+            <template v-if="column === 'dateOfBirth' || column === 'licenseExpiry'">
+              <input
+                type="date"
+                class="form-control form-control-sm"
+                :placeholder="`Lọc ${label}`"
+                v-model="displayFilters[column]"
+                :max="getCurrentDate()"
+              />
+            </template>
+            <template v-else-if="column === 'gender'">
+              <select class="form-control form-control-sm" v-model="displayFilters[column]">
+                <option value="">Tất cả</option>
+                <option value="nam">Nam</option>
+                <option value="nữ">Nữ</option>
+                <option value="khác">Khác</option>
+              </select>
+            </template>
+            <template v-else-if="column === 'licenseClass'">
+              <select class="form-control form-control-sm" v-model="displayFilters[column]">
+                <option value="">Tất cả</option>
+                <option value="A1">A1</option>
+                <option value="A2">A2</option>
+                <option value="B1">B1</option>
+                <option value="B2">B2</option>
+                <option value="C">C</option>
+                <option value="D">D</option>
+                <option value="E">E</option>
+              </select>
+            </template>
+            <template v-else-if="column === 'driverStatus'">
+              <select class="form-control form-control-sm" v-model="displayFilters[column]">
+                <option value="">Tất cả</option>
+                <option value="sẵn sàng">Sẵn sàng</option>
+                <option value="đang trong chuyến">Đang trong chuyến</option>
+                <option value="nghỉ làm">Nghỉ làm</option>
+              </select>
+            </template>
+            <template v-else>
+              <input
+                type="text"
+                class="form-control form-control-sm"
+                :placeholder="`Lọc ${label}`"
+                v-model="displayFilters[column]"
+              />
+            </template>
           </th>
           <th></th>
         </tr>
@@ -196,7 +235,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { getAllDrivers, createDriver, updateDriver } from '../services/driverService'
 import CustomModal from '../components/Modal.vue'
 import { validEmail, validPhone, validName, validAddress } from '../utils/validators'
@@ -213,6 +252,7 @@ const showModal = ref(false)
 const currentDriver = ref(null)
 const filters = ref({})
 const validationErrors = ref({})
+const displayFilters = ref({})
 
 // Columns definition
 const columns = {
@@ -248,6 +288,19 @@ const form = ref({
   licenseExpiry: '',
   driverStatus: 'available',
 })
+
+const getCurrentDate = () => {
+  const today = new Date()
+  return today.toISOString().split('T')[0]
+}
+
+const debounce = (fn, delay) => {
+  let timeoutId
+  return (...args) => {
+    clearTimeout(timeoutId)
+    timeoutId = setTimeout(() => fn.apply(this, args), delay)
+  }
+}
 
 const validateForm = () => {
   validationErrors.value = {}
@@ -338,14 +391,66 @@ const filteredDrivers = computed(() => {
 // Fetch drivers
 const fetchDrivers = async () => {
   try {
-    const response = await getAllDrivers(currentPage.value, pageSize.value)
+    const response = await getAllDrivers(currentPage.value, pageSize.value, filters.value)
     drivers.value = response.content
     totalPages.value = response.totalPages
-    totalElements.value = response.totalElements
   } catch (error) {
     console.error('Error fetching drivers:', error)
   }
 }
+
+const debouncedFetch = debounce(fetchDrivers, 300)
+
+watch(
+  displayFilters,
+  (newDisplayFilters) => {
+    const apiFilters = { ...newDisplayFilters }
+
+    if (apiFilters.gender) {
+      const genderMap = {
+        nam: 'male',
+        nữ: 'female',
+        khác: 'other',
+      }
+      apiFilters.gender = genderMap[apiFilters.gender.toLowerCase()] || apiFilters.gender
+    }
+
+    if (apiFilters.driverStatus) {
+      const statusMap = {
+        'sẵn sàng': 'available',
+        'đang trong chuyến': 'on_trip',
+        'nghỉ làm': 'off_duty',
+      }
+      apiFilters.driverStatus =
+        statusMap[apiFilters.driverStatus.toLowerCase()] || apiFilters.driverStatus
+    }
+
+    if (apiFilters.dateOfBirth) {
+      try {
+        const date = new Date(apiFilters.dateOfBirth)
+        apiFilters.dateOfBirth = date.toISOString().split('T')[0]
+      } catch (error) {
+        console.error('Invalid date:', error)
+        delete apiFilters.dateOfBirth
+      }
+    }
+
+    if (apiFilters.licenseExpiry) {
+      try {
+        const date = new Date(apiFilters.licenseExpiry)
+        apiFilters.licenseExpiry = date.toISOString().split('T')[0]
+      } catch (error) {
+        console.error('Invalid date:', error)
+        delete apiFilters.licenseExpiry
+      }
+    }
+
+    filters.value = apiFilters
+    currentPage.value = 0
+    debouncedFetch()
+  },
+  { deep: true },
+)
 
 const handlePageChange = async (page) => {
   currentPage.value = page
