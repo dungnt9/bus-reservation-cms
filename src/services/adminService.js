@@ -12,11 +12,26 @@ export const createAdmin = async (admin) => {
 }
 
 // Get all admins
-export const getAllAdmins = async (page = 0, size = 10) => {
+export const getAllAdmins = async (page = 0, size = 10, filters = {}) => {
   try {
-    const response = await api.get('/admins', {
-      params: { page, size },
-    })
+    // Convert Vietnamese gender to English for API
+    if (filters.gender) {
+      const genderMap = {
+        nam: 'male',
+        nữ: 'female',
+        khác: 'other',
+      }
+      filters.gender = genderMap[filters.gender.toLowerCase()] || filters.gender
+    }
+
+    // Xây dựng query params
+    const params = {
+      page,
+      size,
+      ...filters,
+    }
+
+    const response = await api.get('/admins', { params })
     return response
   } catch (error) {
     console.error('Error fetching admins:', error)

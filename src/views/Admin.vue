@@ -19,12 +19,24 @@
         </tr>
         <tr>
           <th v-for="(label, column) in columns" :key="column + '-filter'">
-            <input
-              type="text"
-              class="form-control form-control-sm"
-              :placeholder="`Lọc ${label}`"
-              v-model="filters[column]"
-            />
+            <template v-if="column === 'dateOfBirth'">
+              <input
+                type="date"
+                class="form-control form-control-sm"
+                :placeholder="`Lọc ${label}`"
+                v-model="displayFilters[column]"
+                :max="getCurrentDate()"
+              />
+            </template>
+            <!-- Các cột khác giữ nguyên -->
+            <template v-else>
+              <input
+                type="text"
+                class="form-control form-control-sm"
+                :placeholder="`Lọc ${label}`"
+                v-model="displayFilters[column]"
+              />
+            </template>
           </th>
           <th></th>
         </tr>
@@ -143,7 +155,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { getAllAdmins, createAdmin, updateAdmin, deleteAdmin } from '../services/adminService'
 import CustomModal from '../components/Modal.vue'
 import { validEmail, validPhone, validName, validAddress } from '../utils/validators'
@@ -160,7 +172,13 @@ const admins = ref([])
 const showModal = ref(false)
 const currentAdmin = ref(null)
 const filters = ref({})
+const displayFilters = ref({})
 const validationErrors = ref({})
+
+const getCurrentDate = () => {
+  const today = new Date()
+  return today.toISOString().split('T')[0]
+}
 
 // Columns definition - Updated to match the new API structure
 const columns = {
@@ -186,6 +204,14 @@ const form = ref({
   dateOfBirth: '',
   userRole: 'admin',
 })
+
+const debounce = (fn, delay) => {
+  let timeoutId
+  return (...args) => {
+    clearTimeout(timeoutId)
+    timeoutId = setTimeout(() => fn.apply(this, args), delay)
+  }
+}
 
 const validateForm = () => {
   validationErrors.value = {}
@@ -220,6 +246,12 @@ const getMaxBirthDate = () => {
   return minAge.toISOString().split('T')[0]
 }
 
+const genderMap = {
+  nam: 'male',
+  nữ: 'female',
+  khác: 'other',
+}
+
 // Format column values
 const formatColumnValue = (value, column) => {
   if (column === 'dateOfBirth') {
@@ -252,7 +284,7 @@ const filteredAdmins = computed(() => {
 // Fetch admins
 const fetchAdmins = async () => {
   try {
-    const response = await getAllAdmins(currentPage.value, pageSize.value)
+    const response = await getAllAdmins(currentPage.value, pageSize.value, filters.value)
     admins.value = response.content
     totalPages.value = response.totalPages
     totalElements.value = response.totalElements
@@ -260,6 +292,38 @@ const fetchAdmins = async () => {
     console.error('Error fetching admins:', error)
   }
 }
+
+const debouncedFetch = debounce(fetchAdmins, 300)
+
+watch(
+  displayFilters,
+  (newDisplayFilters) => {
+    const apiFilters = { ...newDisplayFilters }
+
+    // Handle gender conversion
+    if (apiFilters.gender) {
+      const lowercaseGender = apiFilters.gender.toLowerCase()
+      apiFilters.gender = genderMap[lowercaseGender] || apiFilters.gender
+    }
+
+    // Handle date conversion if needed
+    if (apiFilters.dateOfBirth) {
+      // Ensure the date is in the format expected by the API
+      try {
+        const date = new Date(apiFilters.dateOfBirth)
+        apiFilters.dateOfBirth = date.toISOString().split('T')[0]
+      } catch (error) {
+        console.error('Invalid date:', error)
+        delete apiFilters.dateOfBirth
+      }
+    }
+
+    filters.value = apiFilters
+    currentPage.value = 0
+    debouncedFetch()
+  },
+  { deep: true },
+)
 
 const handlePageChange = async (page) => {
   currentPage.value = page
