@@ -13,10 +13,25 @@ export const createVehicle = async (vehicle) => {
 }
 
 // Get all vehicles
-export const getAllVehicles = async (page = 0, size = 10) => {
+export const getAllVehicles = async (page = 0, size = 10, filters = {}) => {
   try {
+    // Convert Vietnamese status to English
+    if (filters.vehicleStatus) {
+      const statusMap = {
+        'hoạt động': 'active',
+        'bảo dưỡng': 'maintenance',
+        'ngừng hoạt động': 'retired',
+      }
+      filters.vehicleStatus =
+        statusMap[filters.vehicleStatus.toLowerCase()] || filters.vehicleStatus
+    }
+
     const response = await api.get('/vehicles', {
-      params: { page, size },
+      params: {
+        page,
+        size,
+        ...filters,
+      },
     })
     return response
   } catch (error) {

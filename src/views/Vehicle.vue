@@ -19,12 +19,30 @@
         </tr>
         <tr>
           <th v-for="(label, column) in columns" :key="column + '-filter'">
-            <input
-              type="text"
-              class="form-control form-control-sm"
-              :placeholder="`Lọc ${label}`"
-              v-model="filters[column]"
-            />
+            <template v-if="column === 'vehicleStatus'">
+              <select class="form-control form-control-sm" v-model="displayFilters[column]">
+                <option value="">Tất cả</option>
+                <option value="hoạt động">Hoạt động</option>
+                <option value="bảo dưỡng">Bảo dưỡng</option>
+                <option value="ngừng hoạt động">Ngừng hoạt động</option>
+              </select>
+            </template>
+            <template v-else-if="column === 'seatCapacity'">
+              <input
+                type="number"
+                class="form-control form-control-sm"
+                :placeholder="`Lọc ${label}`"
+                v-model="displayFilters[column]"
+              />
+            </template>
+            <template v-else>
+              <input
+                type="text"
+                class="form-control form-control-sm"
+                :placeholder="`Lọc ${label}`"
+                v-model="displayFilters[column]"
+              />
+            </template>
           </th>
           <th></th>
         </tr>
@@ -109,7 +127,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { getAllVehicles, createVehicle, updateVehicle } from '../services/vehicleService'
 import CustomModal from '../components/Modal.vue'
 import Pagination from '@/components/Pagination.vue'
@@ -126,6 +144,8 @@ const currentVehicle = ref(null)
 const filters = ref({})
 const validationErrors = ref({})
 
+const displayFilters = ref({})
+
 // Columns definition
 const columns = {
   vehicleId: 'ID Phương tiện',
@@ -140,6 +160,64 @@ const form = ref({
   seatCapacity: 45,
   vehicleStatus: 'active',
 })
+
+const formatColumnValue = (value, column) => {
+  if (column === 'vehicleStatus') {
+    const statusMap = {
+      active: 'Hoạt động',
+      maintenance: 'Bảo dưỡng',
+      retired: 'Ngừng hoạt động',
+    }
+    return statusMap[value] || value
+  }
+  return value || ''
+}
+
+// Debounce function
+const debounce = (fn, delay) => {
+  let timeoutId
+  return (...args) => {
+    clearTimeout(timeoutId)
+    timeoutId = setTimeout(() => fn.apply(this, args), delay)
+  }
+}
+
+// Fetch vehicles
+const fetchVehicles = async () => {
+  try {
+    const response = await getAllVehicles(currentPage.value, pageSize.value, filters.value)
+    vehicles.value = response.content
+    totalPages.value = response.totalPages
+  } catch (error) {
+    console.error('Error fetching vehicles:', error)
+  }
+}
+
+const debouncedFetch = debounce(fetchVehicles, 300)
+
+// Watch display filters
+watch(
+  displayFilters,
+  (newDisplayFilters) => {
+    const apiFilters = { ...newDisplayFilters }
+
+    // Handle status conversion
+    if (apiFilters.vehicleStatus) {
+      const statusMap = {
+        'hoạt động': 'active',
+        'bảo dưỡng': 'maintenance',
+        'ngừng hoạt động': 'retired',
+      }
+      apiFilters.vehicleStatus =
+        statusMap[apiFilters.vehicleStatus.toLowerCase()] || apiFilters.vehicleStatus
+    }
+
+    filters.value = apiFilters
+    currentPage.value = 0
+    debouncedFetch()
+  },
+  { deep: true },
+)
 
 const validateForm = () => {
   validationErrors.value = {}
@@ -163,20 +241,6 @@ const validateForm = () => {
   return isValid
 }
 
-// Format column values
-const formatColumnValue = (value, column) => {
-  if (column === 'vehicleStatus') {
-    const statusMap = {
-      active: 'Hoạt động',
-      maintenance: 'Bảo dưỡng',
-      retired: 'Ngừng hoạt động',
-    }
-    return statusMap[value] || value
-  }
-
-  return value || ''
-}
-
 // Computed filtered vehicles
 const filteredVehicles = computed(() => {
   return vehicles.value.filter((vehicle) => {
@@ -187,17 +251,6 @@ const filteredVehicles = computed(() => {
     })
   })
 })
-
-// Fetch vehicles
-const fetchVehicles = async () => {
-  try {
-    const response = await getAllVehicles(currentPage.value, pageSize.value)
-    vehicles.value = response.content
-    totalPages.value = response.totalPages
-  } catch (error) {
-    console.error('Error fetching vehicles:', error)
-  }
-}
 
 const handlePageChange = async (page) => {
   currentPage.value = page
