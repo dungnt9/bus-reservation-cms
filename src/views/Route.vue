@@ -19,12 +19,21 @@
         </tr>
         <tr>
           <th v-for="(label, column) in columns" :key="column + '-filter'">
-            <input
-              type="text"
-              class="form-control form-control-sm"
-              :placeholder="`Lọc ${label}`"
-              v-model="filters[column]"
-            />
+            <template v-if="column === 'routeStatus'">
+              <select class="form-control form-control-sm" v-model="displayFilters[column]">
+                <option value="">Tất cả</option>
+                <option value="hoạt động">Hoạt động</option>
+                <option value="không hoạt động">Không hoạt động</option>
+              </select>
+            </template>
+            <template v-else>
+              <input
+                type="text"
+                class="form-control form-control-sm"
+                :placeholder="`Lọc ${label}`"
+                v-model="displayFilters[column]"
+              />
+            </template>
           </th>
           <th></th>
         </tr>
@@ -144,7 +153,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { getAllRoutes, createRoute, updateRoute } from '../services/routeService'
 import CustomModal from '../components/Modal.vue'
 import Pagination from '@/components/Pagination.vue'
@@ -159,6 +168,7 @@ const showModal = ref(false)
 const currentRoute = ref(null)
 const filters = ref({})
 const validationErrors = ref({})
+const displayFilters = ref({})
 
 // Columns definition
 const columns = {
@@ -249,13 +259,44 @@ const filteredRoutes = computed(() => {
 // Fetch routes
 const fetchRoutes = async () => {
   try {
-    const response = await getAllRoutes(currentPage.value, pageSize.value)
+    const response = await getAllRoutes(currentPage.value, pageSize.value, filters.value)
     routes.value = response.content
     totalPages.value = response.totalPages
   } catch (error) {
     console.error('Error fetching routes:', error)
   }
 }
+
+const debounce = (fn, delay) => {
+  let timeoutId
+  return (...args) => {
+    clearTimeout(timeoutId)
+    timeoutId = setTimeout(() => fn.apply(this, args), delay)
+  }
+}
+
+const debouncedFetch = debounce(fetchRoutes, 300)
+
+watch(
+  displayFilters,
+  (newDisplayFilters) => {
+    const apiFilters = { ...newDisplayFilters }
+
+    if (apiFilters.routeStatus) {
+      const statusMap = {
+        'hoạt động': 'active',
+        'không hoạt động': 'inactive',
+      }
+      apiFilters.routeStatus =
+        statusMap[apiFilters.routeStatus.toLowerCase()] || apiFilters.routeStatus
+    }
+
+    filters.value = apiFilters
+    currentPage.value = 0
+    debouncedFetch()
+  },
+  { deep: true },
+)
 
 const handlePageChange = async (page) => {
   currentPage.value = page

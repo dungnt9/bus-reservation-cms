@@ -13,10 +13,22 @@ export const createRoute = async (route) => {
 }
 
 // Get all routes
-export const getAllRoutes = async (page = 0, size = 10) => {
+export const getAllRoutes = async (page = 0, size = 10, filters = {}) => {
   try {
+    if (filters.routeStatus) {
+      const statusMap = {
+        'hoạt động': 'active',
+        'không hoạt động': 'inactive',
+      }
+      filters.routeStatus = statusMap[filters.routeStatus.toLowerCase()] || filters.routeStatus
+    }
+
     const response = await api.get('/routes', {
-      params: { page, size },
+      params: {
+        page,
+        size,
+        ...filters,
+      },
     })
     return response
   } catch (error) {
