@@ -272,7 +272,7 @@ onMounted(() => {
 }
 
 .action {
-  width: 90px;
+  width: 40px;
 }
 
 .form-control:disabled {

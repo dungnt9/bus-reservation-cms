@@ -340,7 +340,7 @@ onMounted(() => {
 }
 
 .action {
-  width: 90px;
+  width: 40px;
 }
 
 .form-check-input.is-invalid ~ .form-check-label {

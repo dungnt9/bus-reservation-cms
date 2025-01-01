@@ -623,7 +623,7 @@ onMounted(fetchData)
 }
 
 .action {
-  width: 90px;
+  width: 40px;
 }
 
 .table-responsive {

@@ -416,6 +416,6 @@ onMounted(fetchAdmins)
 }
 
 .action {
-  width: 90px;
+  width: 40px;
 }
 </style>

@@ -600,6 +600,6 @@ onMounted(() => {
 }
 
 .action {
-  width: 130px;
+  width: 95px;
 }
 </style>
