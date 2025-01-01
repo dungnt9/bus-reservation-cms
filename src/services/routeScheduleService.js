@@ -43,14 +43,3 @@ export const updateRouteSchedule = async (scheduleId, routeScheduleDetails) => {
     throw error
   }
 }
-
-// Delete a route schedule
-export const deleteRouteSchedule = async (scheduleId) => {
-  try {
-    const response = await api.delete(`/route-schedules/${scheduleId}`)
-    return response
-  } catch (error) {
-    console.error(`Error deleting route schedule with ID ${scheduleId}:`, error)
-    throw error
-  }
-}

@@ -40,16 +40,6 @@ export const updateTrip = async (tripId, tripDetails) => {
   }
 }
 
-export const deleteTrip = async (tripId) => {
-  try {
-    const response = await api.delete(`/trips/${tripId}`)
-    return response
-  } catch (error) {
-    console.error(`Error deleting trip with ID ${tripId}:`, error)
-    throw error
-  }
-}
-
 export const getAvailableDrivers = async () => {
   try {
     const response = await api.get('/trips/drivers/available')

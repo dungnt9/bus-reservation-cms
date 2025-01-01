@@ -31,9 +31,6 @@
             <button class="btn btn-warning btn-sm me-2" @click="openEditModal(invoice)">
               <i class="fas fa-edit"></i>
             </button>
-            <button class="btn btn-danger btn-sm" @click="handleDelete(invoice.invoiceId)">
-              <i class="fas fa-trash-alt"></i>
-            </button>
           </td>
         </tr>
       </tbody>
@@ -115,7 +112,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import CustomModal from '../components/Modal.vue'
-import { getAllInvoices, updateInvoice, deleteInvoice } from '../services/invoiceService'
+import { getAllInvoices, updateInvoice } from '../services/invoiceService'
 import Pagination from '@/components/Pagination.vue'
 
 // Add pagination state
@@ -252,19 +249,6 @@ const handleSubmit = async () => {
   } catch (error) {
     console.error('Error updating invoice:', error)
     alert('Có lỗi xảy ra khi cập nhật hóa đơn!')
-  }
-}
-
-const handleDelete = async (invoiceId) => {
-  if (confirm('Bạn có chắc chắn muốn xóa hóa đơn này?')) {
-    try {
-      console.log('Deleting invoice:', invoiceId)
-      await deleteInvoice(invoiceId)
-      await fetchInvoices()
-    } catch (error) {
-      console.error('Error deleting invoice:', error)
-      alert('Có lỗi xảy ra khi xóa hóa đơn!')
-    }
   }
 }
 

@@ -38,9 +38,6 @@
             <button class="btn btn-warning btn-sm me-2" @click="openModal(driver)">
               <i class="fas fa-edit"></i>
             </button>
-            <button class="btn btn-danger btn-sm" @click="handleDelete(driver.driverId)">
-              <i class="fas fa-trash-alt"></i>
-            </button>
           </td>
         </tr>
       </tbody>
@@ -200,7 +197,7 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import { getAllDrivers, createDriver, updateDriver, deleteDriver } from '../services/driverService'
+import { getAllDrivers, createDriver, updateDriver } from '../services/driverService'
 import CustomModal from '../components/Modal.vue'
 import { validEmail, validPhone, validName, validAddress } from '../utils/validators'
 import Pagination from '@/components/Pagination.vue'
@@ -449,19 +446,6 @@ const handleSubmit = async () => {
   } catch (error) {
     console.error('Error saving driver:', error)
     alert('Phải nhập đủ thông tin cần thiết!')
-  }
-}
-
-// Delete handler
-const handleDelete = async (driverId) => {
-  if (confirm('Bạn có chắc chắn muốn xóa tài xế này?')) {
-    try {
-      await deleteDriver(driverId)
-      await fetchDrivers()
-    } catch (error) {
-      console.error('Error deleting driver:', error)
-      alert('Có lỗi xảy ra khi xóa tài xế!')
-    }
   }
 }
 

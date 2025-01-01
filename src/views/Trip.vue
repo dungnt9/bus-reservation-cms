@@ -38,9 +38,6 @@
             <button class="btn btn-warning btn-sm me-2" @click="openModal(trip)">
               <i class="fas fa-edit"></i>
             </button>
-            <button class="btn btn-danger btn-sm" @click="handleDelete(trip.tripId)">
-              <i class="fas fa-trash-alt"></i>
-            </button>
           </td>
         </tr>
       </tbody>
@@ -250,7 +247,6 @@ import {
   getAllTrips,
   createTrip,
   updateTrip,
-  deleteTrip,
   getAvailableDrivers,
   getAvailableAssistants,
   getActiveRouteSchedules,
@@ -607,18 +603,6 @@ const handleSubmit = async () => {
     console.error('Error saving trip:', error)
     const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra khi lưu thông tin!'
     alert(errorMessage)
-  }
-}
-
-const handleDelete = async (tripId) => {
-  if (confirm('Bạn có chắc chắn muốn xóa chuyến xe này?')) {
-    try {
-      await deleteTrip(tripId)
-      await fetchData()
-    } catch (error) {
-      console.error('Error deleting trip:', error)
-      alert('Có lỗi xảy ra khi xóa chuyến xe!')
-    }
   }
 }
 

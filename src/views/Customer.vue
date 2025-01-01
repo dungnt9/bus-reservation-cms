@@ -42,9 +42,6 @@
             <button class="btn btn-warning btn-sm me-2" @click="openModal(customer)">
               <i class="fas fa-edit"></i>
             </button>
-            <button class="btn btn-danger btn-sm" @click="handleDelete(customer.customerId)">
-              <i class="fas fa-trash-alt"></i>
-            </button>
           </td>
         </tr>
       </tbody>
@@ -233,12 +230,7 @@
 import { ref, computed, onMounted } from 'vue'
 import CustomModal from '../components/Modal.vue'
 import Seat from '../components/Seat.vue'
-import {
-  createCustomer,
-  getAllCustomers,
-  updateCustomer,
-  deleteCustomer,
-} from '../services/customerService'
+import { createCustomer, getAllCustomers, updateCustomer } from '../services/customerService'
 import { createInvoice, getAvailableTrips, getTripSeats } from '../services/invoiceService'
 import { validEmail, validPhone, validName, validAddress } from '../utils/validators'
 import Pagination from '@/components/Pagination.vue'
@@ -463,18 +455,6 @@ const handleSubmit = async () => {
   } catch (error) {
     console.error('Error saving customer:', error)
     alert('Có lỗi xảy ra khi lưu thông tin!')
-  }
-}
-
-const handleDelete = async (customerId) => {
-  if (confirm('Bạn có chắc chắn muốn xóa khách hàng này?')) {
-    try {
-      await deleteCustomer(customerId)
-      await fetchCustomers()
-    } catch (error) {
-      console.error('Error deleting customer:', error)
-      alert('Có lỗi xảy ra khi xóa khách hàng!')
-    }
   }
 }
 

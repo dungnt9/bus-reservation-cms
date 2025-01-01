@@ -38,9 +38,6 @@
             <button class="btn btn-warning btn-sm me-2" @click="openModal(assistant)">
               <i class="fas fa-edit"></i>
             </button>
-            <button class="btn btn-danger btn-sm" @click="handleDelete(assistant.assistantId)">
-              <i class="fas fa-trash-alt"></i>
-            </button>
           </td>
         </tr>
       </tbody>
@@ -151,12 +148,7 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import {
-  getAllAssistants,
-  createAssistant,
-  updateAssistant,
-  deleteAssistant,
-} from '../services/assistantService'
+import { getAllAssistants, createAssistant, updateAssistant } from '../services/assistantService'
 import CustomModal from '../components/Modal.vue'
 import { validEmail, validPhone, validName, validAddress } from '../utils/validators'
 import Pagination from '../components/Pagination.vue'
@@ -372,19 +364,6 @@ const handleSubmit = async () => {
   } catch (error) {
     console.error('Error saving assistant:', error)
     alert('Phải nhập đủ thông tin cần thiết!')
-  }
-}
-
-// Delete handler
-const handleDelete = async (assistantId) => {
-  if (confirm('Bạn có chắc chắn muốn xóa phụ xe này?')) {
-    try {
-      await deleteAssistant(assistantId)
-      await fetchAssistants()
-    } catch (error) {
-      console.error('Error deleting assistant:', error)
-      alert('Có lỗi xảy ra khi xóa phụ xe!')
-    }
   }
 }
 

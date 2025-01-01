@@ -48,16 +48,6 @@ export const updateInvoice = async (invoiceId, invoiceDetails) => {
   }
 }
 
-export const deleteInvoice = async (invoiceId) => {
-  try {
-    const response = await api.delete(`/invoices/${invoiceId}`)
-    return response
-  } catch (error) {
-    console.error(`Error deleting invoice with ID ${invoiceId}:`, error)
-    throw error
-  }
-}
-
 // Get all available trips for dropdown
 export const getAvailableTrips = async () => {
   try {

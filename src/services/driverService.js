@@ -46,14 +46,3 @@ export const updateDriver = async (driverId, driverDetails) => {
     throw error
   }
 }
-
-// Delete a driver
-export const deleteDriver = async (driverId) => {
-  try {
-    const response = await api.delete(`/drivers/${driverId}`) // Using api instance for DELETE request
-    return response
-  } catch (error) {
-    console.error(`Error deleting driver with ID ${driverId}:`, error)
-    throw error
-  }
-}

@@ -46,14 +46,3 @@ export const updateAssistant = async (assistantId, assistantDetails) => {
     throw error
   }
 }
-
-// Delete an assistant
-export const deleteAssistant = async (assistantId) => {
-  try {
-    const response = await api.delete(`/assistants/${assistantId}`)
-    return response
-  } catch (error) {
-    console.error(`Error deleting assistant with ID ${assistantId}:`, error)
-    throw error
-  }
-}

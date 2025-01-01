@@ -60,14 +60,3 @@ export const updateAdmin = async (adminId, adminDetails) => {
     throw error
   }
 }
-
-// Delete an admin
-export const deleteAdmin = async (adminId) => {
-  try {
-    const response = await api.delete(`/admins/${adminId}`)
-    return response
-  } catch (error) {
-    console.error(`Error deleting admin with ID ${adminId}:`, error)
-    throw error
-  }
-}

@@ -38,9 +38,6 @@
             <button class="btn btn-warning btn-sm me-2" @click="openModal(schedule)">
               <i class="fas fa-edit"></i>
             </button>
-            <button class="btn btn-danger btn-sm" @click="handleDelete(schedule.scheduleId)">
-              <i class="fas fa-trash-alt"></i>
-            </button>
           </td>
         </tr>
       </tbody>
@@ -123,7 +120,6 @@ import {
   getAllRouteSchedules,
   createRouteSchedule,
   updateRouteSchedule,
-  deleteRouteSchedule,
 } from '../services/routeScheduleService'
 import { getAllRoutes } from '../services/routeService'
 import CustomModal from '../components/Modal.vue'
@@ -320,19 +316,6 @@ const handleSubmit = async () => {
       alert(`Lỗi: ${error.response.data.message}`)
     } else {
       alert('Có lỗi xảy ra khi lưu lịch trình!')
-    }
-  }
-}
-
-// Delete handler
-const handleDelete = async (scheduleId) => {
-  if (confirm('Bạn có chắc chắn muốn xóa lịch trình này?')) {
-    try {
-      await deleteRouteSchedule(scheduleId)
-      await fetchRouteSchedules()
-    } catch (error) {
-      console.error('Error deleting route schedule:', error)
-      alert('Có lỗi xảy ra khi xóa lịch trình!')
     }
   }
 }

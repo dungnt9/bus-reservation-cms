@@ -38,9 +38,6 @@
             <button class="btn btn-warning btn-sm me-2" @click="openModal(route)">
               <i class="fas fa-edit"></i>
             </button>
-            <button class="btn btn-danger btn-sm" @click="handleDelete(route.routeId)">
-              <i class="fas fa-trash-alt"></i>
-            </button>
           </td>
         </tr>
       </tbody>
@@ -148,7 +145,7 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import { getAllRoutes, createRoute, updateRoute, deleteRoute } from '../services/routeService'
+import { getAllRoutes, createRoute, updateRoute } from '../services/routeService'
 import CustomModal from '../components/Modal.vue'
 import Pagination from '@/components/Pagination.vue'
 
@@ -329,19 +326,6 @@ const handleSubmit = async () => {
   } catch (error) {
     console.error('Error saving route:', error)
     alert('Có lỗi xảy ra khi lưu thông tin!')
-  }
-}
-
-// Delete handler
-const handleDelete = async (routeId) => {
-  if (confirm('Bạn có chắc chắn muốn xóa tuyến đường này?')) {
-    try {
-      await deleteRoute(routeId)
-      await fetchRoutes()
-    } catch (error) {
-      console.error('Error deleting route:', error)
-      alert('Có lỗi xảy ra khi xóa tuyến đường!')
-    }
   }
 }
 

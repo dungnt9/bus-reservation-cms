@@ -46,14 +46,3 @@ export const updateVehicle = async (vehicleId, vehicleDetails) => {
     throw error
   }
 }
-
-// Delete a vehicle
-export const deleteVehicle = async (vehicleId) => {
-  try {
-    const response = await api.delete(`/vehicles/${vehicleId}`)
-    return response
-  } catch (error) {
-    console.error(`Error deleting vehicle with ID ${vehicleId}:`, error)
-    throw error
-  }
-}

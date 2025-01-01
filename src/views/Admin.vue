@@ -50,9 +50,6 @@
             <button class="btn btn-warning btn-sm me-2" @click="openModal(admin)">
               <i class="fas fa-edit"></i>
             </button>
-            <button class="btn btn-danger btn-sm" @click="handleDelete(admin.adminId)">
-              <i class="fas fa-trash-alt"></i>
-            </button>
           </td>
         </tr>
       </tbody>
@@ -156,7 +153,7 @@
 
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue'
-import { getAllAdmins, createAdmin, updateAdmin, deleteAdmin } from '../services/adminService'
+import { getAllAdmins, createAdmin, updateAdmin } from '../services/adminService'
 import CustomModal from '../components/Modal.vue'
 import { validEmail, validPhone, validName, validAddress } from '../utils/validators'
 import Pagination from '@/components/Pagination.vue'
@@ -399,19 +396,6 @@ const handleSubmit = async () => {
   } catch (error) {
     console.error('Error saving admin:', error)
     alert('Có lỗi xảy ra khi lưu thông tin!')
-  }
-}
-
-// Delete handler
-const handleDelete = async (adminId) => {
-  if (confirm('Bạn có chắc chắn muốn xóa quản trị viên này?')) {
-    try {
-      await deleteAdmin(adminId)
-      await fetchAdmins()
-    } catch (error) {
-      console.error('Error deleting admin:', error)
-      alert('Có lỗi xảy ra khi xóa quản trị viên!')
-    }
   }
 }
 

@@ -38,9 +38,6 @@
             <button class="btn btn-warning btn-sm me-2" @click="openModal(vehicle)">
               <i class="fas fa-edit"></i>
             </button>
-            <button class="btn btn-danger btn-sm" @click="handleDelete(vehicle.vehicleId)">
-              <i class="fas fa-trash-alt"></i>
-            </button>
           </td>
         </tr>
       </tbody>
@@ -113,12 +110,7 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import {
-  getAllVehicles,
-  createVehicle,
-  updateVehicle,
-  deleteVehicle,
-} from '../services/vehicleService'
+import { getAllVehicles, createVehicle, updateVehicle } from '../services/vehicleService'
 import CustomModal from '../components/Modal.vue'
 import Pagination from '@/components/Pagination.vue'
 
@@ -268,19 +260,6 @@ const handleSubmit = async () => {
   } catch (error) {
     console.error('Error saving vehicle:', error)
     alert('Có lỗi xảy ra khi lưu thông tin!')
-  }
-}
-
-// Delete handler
-const handleDelete = async (vehicleId) => {
-  if (confirm('Bạn có chắc chắn muốn xóa phương tiện này?')) {
-    try {
-      await deleteVehicle(vehicleId)
-      await fetchVehicles()
-    } catch (error) {
-      console.error('Error deleting vehicle:', error)
-      alert('Có lỗi xảy ra khi xóa phương tiện!')
-    }
   }
 }
 

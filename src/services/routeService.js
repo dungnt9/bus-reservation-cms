@@ -46,14 +46,3 @@ export const updateRoute = async (routeId, routeDetails) => {
     throw error
   }
 }
-
-// Delete a route
-export const deleteRoute = async (routeId) => {
-  try {
-    const response = await api.delete(`/routes/${routeId}`)
-    return response
-  } catch (error) {
-    console.error(`Error deleting route with ID ${routeId}:`, error)
-    throw error
-  }
-}
