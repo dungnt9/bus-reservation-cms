@@ -16,10 +16,34 @@ export const createInvoice = async (invoiceData) => {
   }
 }
 
-export const getAllInvoices = async (page = 0, size = 10) => {
+export const getAllInvoices = async (page = 0, size = 10, filters = {}) => {
   try {
+    // Convert Vietnamese payment status to English
+    if (filters.paymentStatus) {
+      const statusMap = {
+        'chờ thanh toán': 'pending',
+        'đã thanh toán': 'paid',
+      }
+      filters.paymentStatus =
+        statusMap[filters.paymentStatus.toLowerCase()] || filters.paymentStatus
+    }
+
+    // Convert Vietnamese payment method to English
+    if (filters.paymentMethod) {
+      const methodMap = {
+        'tiền mặt': 'cash',
+        thẻ: 'card',
+      }
+      filters.paymentMethod =
+        methodMap[filters.paymentMethod.toLowerCase()] || filters.paymentMethod
+    }
+
     const response = await api.get('/invoices', {
-      params: { page, size },
+      params: {
+        page,
+        size,
+        ...filters,
+      },
     })
     return response
   } catch (error) {

@@ -12,12 +12,37 @@
         </tr>
         <tr>
           <th v-for="(label, column) in columns" :key="column + '-filter'">
-            <input
-              type="text"
-              class="form-control form-control-sm"
-              :placeholder="`Lọc ${label}`"
-              v-model="filters[column]"
-            />
+            <template v-if="column === 'invoiceDate'">
+              <input
+                type="date"
+                class="form-control form-control-sm"
+                :placeholder="`Lọc ${label}`"
+                v-model="displayFilters[column]"
+                :max="getCurrentDate()"
+              />
+            </template>
+            <template v-else-if="column === 'paymentStatus'">
+              <select class="form-control form-control-sm" v-model="displayFilters[column]">
+                <option value="">Tất cả</option>
+                <option value="chờ thanh toán">Chờ thanh toán</option>
+                <option value="đã thanh toán">Đã thanh toán</option>
+              </select>
+            </template>
+            <template v-else-if="column === 'paymentMethod'">
+              <select class="form-control form-control-sm" v-model="displayFilters[column]">
+                <option value="">Tất cả</option>
+                <option value="tiền mặt">Tiền mặt</option>
+                <option value="thẻ">Thẻ</option>
+              </select>
+            </template>
+            <template v-else>
+              <input
+                type="text"
+                class="form-control form-control-sm"
+                :placeholder="`Lọc ${label}`"
+                v-model="displayFilters[column]"
+              />
+            </template>
           </th>
           <th></th>
         </tr>
@@ -110,7 +135,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import CustomModal from '../components/Modal.vue'
 import { getAllInvoices, updateInvoice } from '../services/invoiceService'
 import Pagination from '@/components/Pagination.vue'
@@ -124,6 +149,7 @@ const totalElements = ref(0)
 const invoices = ref([])
 const showModal = ref(false)
 const filters = ref({})
+const displayFilters = ref({})
 
 // Form state
 const form = ref({
@@ -154,6 +180,76 @@ const columns = {
   paymentMethod: 'Phương thức',
   invoiceDate: 'Ngày lập',
 }
+
+const fetchInvoices = async () => {
+  try {
+    const response = await getAllInvoices(currentPage.value, pageSize.value, filters.value)
+    invoices.value = response.content
+    totalPages.value = response.totalPages
+    totalElements.value = response.totalElements
+  } catch (error) {
+    console.error('Error fetching invoices:', error)
+    alert('Có lỗi xảy ra khi tải danh sách hóa đơn!')
+  }
+}
+
+const getCurrentDate = () => {
+  const today = new Date()
+  return today.toISOString().split('T')[0]
+}
+
+const debounce = (fn, delay) => {
+  let timeoutId
+  return (...args) => {
+    clearTimeout(timeoutId)
+    timeoutId = setTimeout(() => fn.apply(this, args), delay)
+  }
+}
+
+const debouncedFetch = debounce(fetchInvoices, 300)
+
+watch(
+  displayFilters,
+  (newDisplayFilters) => {
+    const apiFilters = { ...newDisplayFilters }
+
+    // Handle status conversion
+    if (apiFilters.paymentStatus) {
+      const statusMap = {
+        'chờ thanh toán': 'pending',
+        'đã thanh toán': 'paid',
+      }
+      apiFilters.paymentStatus =
+        statusMap[apiFilters.paymentStatus.toLowerCase()] || apiFilters.paymentStatus
+    }
+
+    // Handle method conversion
+    if (apiFilters.paymentMethod) {
+      const methodMap = {
+        'tiền mặt': 'cash',
+        thẻ: 'card',
+      }
+      apiFilters.paymentMethod =
+        methodMap[apiFilters.paymentMethod.toLowerCase()] || apiFilters.paymentMethod
+    }
+
+    // Handle date conversion
+    if (apiFilters.invoiceDate) {
+      try {
+        const date = new Date(apiFilters.invoiceDate)
+        apiFilters.invoiceDate = date.toISOString().split('T')[0]
+      } catch (error) {
+        console.error('Invalid date:', error)
+        delete apiFilters.invoiceDate
+      }
+    }
+
+    filters.value = apiFilters
+    currentPage.value = 0
+    debouncedFetch()
+  },
+  { deep: true },
+)
 
 // Computed properties
 const filteredInvoices = computed(() => {
@@ -195,18 +291,6 @@ const formatCurrency = (value) => {
     style: 'currency',
     currency: 'VND',
   }).format(value)
-}
-
-const fetchInvoices = async () => {
-  try {
-    const response = await getAllInvoices(currentPage.value, pageSize.value)
-    invoices.value = response.content
-    totalPages.value = response.totalPages
-    totalElements.value = response.totalElements
-  } catch (error) {
-    console.error('Error fetching invoices:', error)
-    alert('Có lỗi xảy ra khi tải danh sách hóa đơn!')
-  }
 }
 
 const handlePageChange = async (page) => {
