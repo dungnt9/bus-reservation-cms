@@ -16,6 +16,9 @@
       >
         Change Password
       </button>
+      <button :class="['tab-btn', { active: activeTab === 'phone' }]" @click="activeTab = 'phone'">
+        Change Phone
+      </button>
     </div>
 
     <!-- Profile Settings -->
@@ -98,40 +101,86 @@
       <form @submit.prevent="handleChangePassword" novalidate>
         <div class="mb-3">
           <label class="form-label">Current Password<span class="text-danger">*</span></label>
-          <input
-            type="password"
-            class="form-control"
-            v-model="passwordForm.currentPassword"
-            :class="{ 'is-invalid': validationErrors.currentPassword }"
-          />
-          <div class="invalid-feedback" v-if="validationErrors.currentPassword">
-            {{ validationErrors.currentPassword }}
+          <div class="position-relative">
+            <input
+              :type="showCurrentPassword ? 'text' : 'password'"
+              class="form-control"
+              v-model="passwordForm.currentPassword"
+              :class="{ 'is-invalid': validationErrors.currentPassword }"
+            />
+            <button
+              type="button"
+              class="btn position-absolute end-0 top-50 translate-middle-y bg-transparent border-0"
+              @click="showCurrentPassword = !showCurrentPassword"
+            >
+              <img
+                :src="
+                  showCurrentPassword ? '/images/setting/eye-slash.svg' : '/images/setting/eye.svg'
+                "
+                alt="toggle password visibility"
+                width="20"
+                height="20"
+              />
+            </button>
+            <div class="invalid-feedback" v-if="validationErrors.currentPassword">
+              {{ validationErrors.currentPassword }}
+            </div>
           </div>
         </div>
 
         <div class="mb-3">
           <label class="form-label">New Password<span class="text-danger">*</span></label>
-          <input
-            type="password"
-            class="form-control"
-            v-model="passwordForm.newPassword"
-            :class="{ 'is-invalid': validationErrors.newPassword }"
-          />
-          <div class="invalid-feedback" v-if="validationErrors.newPassword">
-            {{ validationErrors.newPassword }}
+          <div class="position-relative">
+            <input
+              :type="showNewPassword ? 'text' : 'password'"
+              class="form-control"
+              v-model="passwordForm.newPassword"
+              :class="{ 'is-invalid': validationErrors.newPassword }"
+            />
+            <button
+              type="button"
+              class="btn position-absolute end-0 top-50 translate-middle-y bg-transparent border-0"
+              @click="showNewPassword = !showNewPassword"
+            >
+              <img
+                :src="showNewPassword ? '/images/setting/eye-slash.svg' : '/images/setting/eye.svg'"
+                alt="toggle password visibility"
+                width="20"
+                height="20"
+              />
+            </button>
+            <div class="invalid-feedback" v-if="validationErrors.newPassword">
+              {{ validationErrors.newPassword }}
+            </div>
           </div>
         </div>
 
         <div class="mb-3">
           <label class="form-label">Confirm New Password<span class="text-danger">*</span></label>
-          <input
-            type="password"
-            class="form-control"
-            v-model="passwordForm.confirmPassword"
-            :class="{ 'is-invalid': validationErrors.confirmPassword }"
-          />
-          <div class="invalid-feedback" v-if="validationErrors.confirmPassword">
-            {{ validationErrors.confirmPassword }}
+          <div class="position-relative">
+            <input
+              :type="showConfirmPassword ? 'text' : 'password'"
+              class="form-control"
+              v-model="passwordForm.confirmPassword"
+              :class="{ 'is-invalid': validationErrors.confirmPassword }"
+            />
+            <button
+              type="button"
+              class="btn position-absolute end-0 top-50 translate-middle-y bg-transparent border-0"
+              @click="showConfirmPassword = !showConfirmPassword"
+            >
+              <img
+                :src="
+                  showConfirmPassword ? '/images/setting/eye-slash.svg' : '/images/setting/eye.svg'
+                "
+                alt="toggle password visibility"
+                width="20"
+                height="20"
+              />
+            </button>
+            <div class="invalid-feedback" v-if="validationErrors.confirmPassword">
+              {{ validationErrors.confirmPassword }}
+            </div>
           </div>
         </div>
 
@@ -140,18 +189,123 @@
         </div>
       </form>
     </div>
+
+    <div v-if="activeTab === 'phone'" class="settings-form">
+      <form @submit.prevent="handlePhoneChange" novalidate>
+        <div class="mb-3">
+          <label class="form-label">Số điện thoại hiện tại</label>
+          <input type="tel" class="form-control" v-model="phoneForm.currentPhone" disabled />
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Mật khẩu<span class="text-danger">*</span></label>
+          <div class="position-relative">
+            <input
+              :type="showPhonePassword ? 'text' : 'password'"
+              class="form-control"
+              v-model="phoneForm.password"
+              :class="{ 'is-invalid': validationErrors.password }"
+            />
+            <button
+              type="button"
+              class="btn position-absolute end-0 top-50 translate-middle-y bg-transparent border-0"
+              @click="showPhonePassword = !showPhonePassword"
+            >
+              <img
+                :src="
+                  showPhonePassword ? '/images/setting/eye-slash.svg' : '/images/setting/eye.svg'
+                "
+                alt="toggle password visibility"
+                width="20"
+                height="20"
+              />
+            </button>
+            <div class="invalid-feedback" v-if="validationErrors.password">
+              {{ validationErrors.password }}
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Số điện thoại mới<span class="text-danger">*</span></label>
+          <input
+            type="tel"
+            class="form-control"
+            v-model="phoneForm.newPhone"
+            :class="{ 'is-invalid': validationErrors.newPhone }"
+            placeholder="Nhập số điện thoại mới"
+          />
+          <div class="invalid-feedback" v-if="validationErrors.newPhone">
+            {{ validationErrors.newPhone }}
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-end">
+          <button type="submit" class="btn btn-primary" :disabled="isSubmitting">
+            {{ isSubmitting ? 'Đang xử lý...' : 'Đổi số điện thoại' }}
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Add this OTP Modal -->
+    <div class="modal" tabindex="-1" :class="{ 'd-block': showOtpModal }" v-if="showOtpModal">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Xác thực OTP</h5>
+            <button type="button" class="btn-close" @click="closeOtpModal"></button>
+          </div>
+          <div class="modal-body">
+            <p>Vui lòng nhập mã OTP được gửi đến số điện thoại {{ phoneForm.newPhone }}</p>
+            <input
+              type="text"
+              class="form-control text-center"
+              v-model="otpForm.otp"
+              placeholder="Nhập mã 6 số"
+              maxlength="6"
+              :class="{ 'is-invalid': validationErrors.otp }"
+            />
+            <div class="invalid-feedback" v-if="validationErrors.otp">
+              {{ validationErrors.otp }}
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" @click="closeOtpModal">Hủy</button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              @click="handleOtpVerification"
+              :disabled="isVerifying"
+            >
+              {{ isVerifying ? 'Đang xác thực...' : 'Xác nhận' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-backdrop fade show" v-if="showOtpModal"></div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import authService from '@/services/authService'
-import { validEmail, validName, validAddress } from '@/utils/validators'
+import { validEmail, validName, validAddress, validPhone } from '@/utils/validators'
 
 const router = useRouter()
 const activeTab = ref('profile')
 const validationErrors = reactive({})
+
+const isSubmitting = ref(false)
+const isVerifying = ref(false)
+const showOtpModal = ref(false)
+
+const showCurrentPassword = ref(false)
+const showNewPassword = ref(false)
+const showConfirmPassword = ref(false)
+const showPhonePassword = ref(false)
 
 // Profile form
 const profileForm = reactive({
@@ -179,16 +333,28 @@ const maxBirthDate = computed(() => {
     .split('T')[0]
 })
 
+const phoneForm = reactive({
+  currentPhone: '',
+  password: '',
+  newPhone: '',
+})
+
+const otpForm = reactive({
+  otp: '',
+})
+
 // Load user data
 onMounted(() => {
   const currentUser = authService.getCurrentUser()
   if (currentUser) {
-    profileForm.fullName = currentUser.fullName
-    profileForm.phoneNumber = currentUser.phoneNumber
+    profileForm.fullName = currentUser.fullName || ''
     profileForm.email = currentUser.email || ''
     profileForm.gender = currentUser.gender || 'male'
     profileForm.address = currentUser.address || ''
     profileForm.dateOfBirth = currentUser.dateOfBirth || ''
+
+    // Set current phone number
+    phoneForm.currentPhone = currentUser.phoneNumber
   }
 })
 
@@ -238,6 +404,93 @@ const validatePasswordForm = () => {
   return isValid
 }
 
+const validatePhoneForm = () => {
+  const errors = {}
+  let isValid = true
+
+  if (!phoneForm.password) {
+    alert('Vui lòng nhập mật khẩu')
+    isValid = false
+  }
+
+  if (!phoneForm.newPhone) {
+    alert('Vui lòng nhập số điện thoại mới')
+    isValid = false
+  } else if (!validPhone(phoneForm.newPhone)) {
+    alert('Số điện thoại không hợp lệ (phải bắt đầu bằng 0 và có 10 chữ số)')
+    isValid = false
+  } else if (phoneForm.newPhone === phoneForm.currentPhone) {
+    alert('Số điện thoại mới phải khác số điện thoại hiện tại')
+    isValid = false
+  }
+
+  validationErrors.value = errors
+  return isValid
+}
+
+const validateOtp = () => {
+  const errors = {}
+  let isValid = true
+
+  if (!otpForm.otp) {
+    alert('Vui lòng nhập mã OTP')
+    isValid = false
+  } else if (!/^\d+$/.test(otpForm.otp)) {
+    alert('Mã OTP phải có 6 chữ số')
+    isValid = false
+  }
+
+  validationErrors.value = errors
+  return isValid
+}
+
+const handlePhoneChange = async () => {
+  if (!validatePhoneForm()) return
+
+  try {
+    isSubmitting.value = true
+    await authService.requestPhoneChangeOTP({
+      userId: authService.getCurrentUser().userId,
+      currentPhone: phoneForm.currentPhone,
+      newPhone: phoneForm.newPhone,
+      password: phoneForm.password,
+    })
+
+    showOtpModal.value = true
+  } catch (error) {
+    alert(error.message || 'Không thể gửi mã OTP')
+  } finally {
+    isSubmitting.value = false
+  }
+}
+
+const handleOtpVerification = async () => {
+  if (!validateOtp()) return
+
+  try {
+    isVerifying.value = true
+    await authService.verifyPhoneChangeOTP({
+      userId: authService.getCurrentUser().userId,
+      phoneNumber: phoneForm.newPhone,
+      otp: otpForm.otp,
+    })
+
+    alert('Đổi số điện thoại thành công! Vui lòng đăng nhập lại.')
+    authService.logout()
+    router.push('/login')
+  } catch (error) {
+    alert(error.message || 'Xác thực OTP thất bại')
+  } finally {
+    isVerifying.value = false
+  }
+}
+
+const closeOtpModal = () => {
+  showOtpModal.value = false
+  otpForm.otp = ''
+  validationErrors.value = {}
+}
+
 // Handle profile update
 const handleUpdateProfile = () => {
   if (!validateProfileForm()) return
@@ -274,6 +527,12 @@ const handleChangePassword = () => {
       alert(error.message || 'Failed to change password')
     })
 }
+
+onUnmounted(() => {
+  if (showOtpModal.value) {
+    closeOtpModal()
+  }
+})
 </script>
 
 <style scoped>
@@ -333,5 +592,49 @@ const handleChangePassword = () => {
 .btn-primary:hover {
   background-color: #2c5282;
   border-color: #2c5282;
+}
+
+.modal {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1040;
+}
+
+.modal {
+  z-index: 1050;
+}
+
+.position-relative {
+  position: relative;
+}
+
+.position-relative input {
+  padding-right: 40px;
+}
+
+.position-relative button {
+  padding: 0.375rem;
+  margin-right: 0.25rem;
+}
+
+.position-relative button:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.position-relative img {
+  opacity: 0.6;
+}
+
+.position-relative button:hover img {
+  opacity: 1;
 }
 </style>

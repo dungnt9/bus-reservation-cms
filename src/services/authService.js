@@ -69,7 +69,7 @@ const authService = {
     }
   },
 
-  updateProfile(userData) {
+  async updateProfile(userData) {
     return api
       .put(`/users/${userData.userId}`, userData)
       .then((response) => {
@@ -86,7 +86,7 @@ const authService = {
       })
   },
 
-  changePassword(userId, currentPassword, newPassword) {
+  async changePassword(userId, currentPassword, newPassword) {
     return api
       .post(`/users/${userId}/change-password`, {
         currentPassword,
@@ -125,6 +125,66 @@ const authService = {
         throw new Error(error.response.data?.message || 'Đặt lại mật khẩu thất bại')
       }
       throw new Error('Lỗi kết nối. Vui lòng kiểm tra lại mạng')
+    }
+  },
+
+  async requestPhoneChangeOTP({ userId, currentPhone, newPhone, password }) {
+    try {
+      const response = await api.post('/auth/request-phone-change', {
+        userId,
+        currentPhone,
+        newPhone,
+        password,
+      })
+      return response
+    } catch (error) {
+      if (error.response) {
+        switch (error.response.status) {
+          case 401:
+            throw new Error('Mật khẩu không đúng')
+          case 409:
+            throw new Error('Số điện thoại đã được đăng ký')
+          case 403:
+            throw new Error('Không có quyền thực hiện thao tác này')
+          default:
+            throw new Error(error.response.data?.message || 'Không thể gửi mã OTP')
+        }
+      }
+      throw new Error('Lỗi kết nối. Vui lòng kiểm tra lại')
+    }
+  },
+
+  // Verify OTP for phone number change
+  async verifyPhoneChangeOTP({ userId, phoneNumber, otp }) {
+    try {
+      const response = await api.post('/auth/verify-phone-change', {
+        userId,
+        phoneNumber,
+        otp,
+      })
+
+      if (response.message === 'Phone number updated successfully') {
+        // Update user information in localStorage
+        const currentUser = this.getCurrentUser()
+        const updatedUser = { ...currentUser, phoneNumber: phoneNumber }
+        localStorage.setItem(USER_KEY, JSON.stringify(updatedUser))
+      }
+
+      return response
+    } catch (error) {
+      if (error.response) {
+        switch (error.response.status) {
+          case 400:
+            throw new Error('Mã OTP không hợp lệ')
+          case 408:
+            throw new Error('Mã OTP đã hết hạn')
+          case 403:
+            throw new Error('Không có quyền thực hiện thao tác này')
+          default:
+            throw new Error(error.response.data?.message || 'Không thể xác thực OTP')
+        }
+      }
+      throw new Error('Lỗi kết nối. Vui lòng kiểm tra lại')
     }
   },
 }

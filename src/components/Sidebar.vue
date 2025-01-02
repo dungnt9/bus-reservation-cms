@@ -8,7 +8,7 @@
     >
       <router-link to="/account-settings" class="head">
         <div class="user-img">
-          <img src="\images\sidebar\account.svg" alt="" />
+          <img src="\images\sidebar\cms.svg" alt="" />
         </div>
         <div class="user-details" :class="{ 'show-details': isExpanded }">
           <p class="title">Admin</p>
@@ -36,7 +36,7 @@
             <li>
               <a href="#" @click.prevent="handleLogout" class="menu-link">
                 <div class="icon-wrapper">
-                  <img class="img-li" src="\images\sidebar\account.svg" alt="" />
+                  <img class="img-li" src="\images\sidebar\logout.svg" alt="" />
                 </div>
                 <span class="text" :class="{ 'show-text': isExpanded }">Logout</span>
               </a>
@@ -64,61 +64,61 @@ const menuItems = [
   {
     key: 'admin',
     to: '/admin',
-    icon: '\\images\\sidebar\\account.svg',
+    icon: 'images/sidebar/admin.svg',
     text: 'Admin',
   },
   {
     key: 'customer',
     to: '/customer',
-    icon: '\\images\\sidebar\\account.svg',
+    icon: 'images/sidebar/customer.svg',
     text: 'Khách hàng',
   },
   {
     key: 'driver',
     to: '/driver',
-    icon: '\\images\\sidebar\\driver.svg',
+    icon: 'images/sidebar/driver.svg',
     text: 'Tài xế',
   },
   {
     key: 'assistant',
     to: '/assistant',
-    icon: '\\images\\sidebar\\account.svg',
+    icon: 'images/sidebar/assistant.svg',
     text: 'Phụ xe',
   },
   {
     key: 'vehicle',
     to: '/vehicle',
-    icon: '\\images\\sidebar\\account.svg',
+    icon: 'images/sidebar/bus.svg',
     text: 'Xe & Ghế xe',
   },
   {
     key: 'route',
     to: '/route',
-    icon: '\\images\\sidebar\\account.svg',
+    icon: 'images/sidebar/route.svg',
     text: 'Tuyến xe',
   },
   {
     key: 'route-schedule',
     to: '/route-schedule',
-    icon: '\\images\\sidebar\\account.svg',
+    icon: 'images/sidebar/route-schedule.svg',
     text: 'Lịch tuyến xe',
   },
   {
     key: 'trip',
     to: '/trip',
-    icon: '\\images\\sidebar\\account.svg',
+    icon: 'images/sidebar/trip.svg',
     text: 'Chuyến xe',
   },
   {
     key: 'invoice',
     to: '/invoice',
-    icon: '\\images\\sidebar\\account.svg',
+    icon: 'images/sidebar/invoice.svg',
     text: 'Hóa đơn',
   },
   {
     key: 'report',
     to: '/',
-    icon: '\\images\\sidebar\\account.svg',
+    icon: 'images/sidebar/report.svg',
     text: 'Báo cáo thống kê',
   },
 ]
