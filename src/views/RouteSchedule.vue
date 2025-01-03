@@ -19,12 +19,46 @@
         </tr>
         <tr>
           <th v-for="(label, column) in columns" :key="column + '-filter'">
-            <input
-              type="text"
-              class="form-control form-control-sm"
-              :placeholder="`Lọc ${label}`"
-              v-model="filters[column]"
-            />
+            <template v-if="column === 'departureTime'">
+              <input
+                type="time"
+                class="form-control form-control-sm"
+                v-model="displayFilters[column]"
+              />
+            </template>
+            <template v-else-if="column === 'daysOfWeek'">
+              <div class="dropdown">
+                <div
+                  class="form-control form-control-sm dropdown-toggle"
+                  @click="toggleDaysDropdown"
+                  role="button"
+                >
+                  {{ selectedDaysText }}
+                </div>
+                <div class="dropdown-menu p-2" :class="{ show: showDaysDropdown }">
+                  <div v-for="day in daysOfWeek" :key="day.value" class="form-check">
+                    <input
+                      type="checkbox"
+                      class="form-check-input"
+                      :id="day.value"
+                      :value="day.value"
+                      v-model="selectedDays"
+                    />
+                    <label class="form-check-label" :for="day.value">{{ day.label }}</label>
+                  </div>
+                  <div class="dropdown-divider"></div>
+                  <button class="btn btn-sm btn-primary w-100" @click="applyDaysFilter">Lọc</button>
+                </div>
+              </div>
+            </template>
+            <template v-else>
+              <input
+                type="text"
+                class="form-control form-control-sm"
+                :placeholder="'Lọc ' + label"
+                v-model="displayFilters[column]"
+              />
+            </template>
           </th>
           <th></th>
         </tr>
@@ -111,18 +145,24 @@
         </button>
       </template>
     </CustomModal>
+    <Pagination
+      :current-page="currentPage"
+      :total-pages="totalPages"
+      @page-change="handlePageChange"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import {
   getAllRouteSchedules,
   createRouteSchedule,
   updateRouteSchedule,
 } from '../services/routeScheduleService'
-import { getAllRoutes } from '../services/routeService'
 import CustomModal from '../components/Modal.vue'
+import { getAllRoutesWithoutPagination } from '../services/routeService'
+import Pagination from '@/components/Pagination.vue'
 
 // Reactive state
 const routeSchedules = ref([])
@@ -131,6 +171,33 @@ const showModal = ref(false)
 const currentRouteSchedule = ref(null)
 const filters = ref({})
 const validationErrors = ref({})
+
+const currentPage = ref(0)
+const pageSize = ref(10)
+const totalPages = ref(0)
+
+const displayFilters = ref({})
+
+const showDaysDropdown = ref(false)
+const selectedDays = ref([])
+
+const selectedDaysText = computed(() => {
+  return selectedDays.value.length > 0
+    ? selectedDays.value.map((day) => daysOfWeek.find((d) => d.value === day)?.label).join(', ')
+    : 'Chọn ngày'
+})
+
+const toggleDaysDropdown = () => {
+  showDaysDropdown.value = !showDaysDropdown.value
+}
+
+const applyDaysFilter = () => {
+  displayFilters.value = {
+    ...displayFilters.value,
+    daysOfWeek: selectedDays.value,
+  }
+  showDaysDropdown.value = false // Close dropdown after applying filter
+}
 
 // Days of week
 const daysOfWeek = [
@@ -213,13 +280,7 @@ const formatColumnValue = (value, column) => {
 
 // Computed filtered route schedules
 const filteredRouteSchedules = computed(() => {
-  return routeSchedules.value.filter((schedule) => {
-    return Object.entries(filters.value).every(([key, value]) => {
-      if (!value) return true
-      const scheduleValue = getNestedValue(schedule, key)
-      return String(scheduleValue).toLowerCase().includes(value.toLowerCase())
-    })
-  })
+  return routeSchedules.value
 })
 
 // Utility function to get nested object values
@@ -227,21 +288,46 @@ const getNestedValue = (obj, path) => {
   return path.split('.').reduce((o, key) => o?.[key], obj) || ''
 }
 
-// Fetch route schedules
 const fetchRouteSchedules = async () => {
   try {
-    const response = await getAllRouteSchedules()
-    routeSchedules.value = response
+    const response = await getAllRouteSchedules(currentPage.value, pageSize.value, filters.value)
+    routeSchedules.value = response.content || []
+    totalPages.value = response.totalPages || 0
   } catch (error) {
-    console.error('Error fetching route schedules:', error)
-    alert('Có lỗi xảy ra khi tải dữ liệu lịch trình!')
+    console.error('Error:', error)
+    routeSchedules.value = []
+    totalPages.value = 0
+    if (error.response?.data?.message) {
+      alert(`Lỗi: ${error.response.data.message}`)
+    }
   }
+}
+
+watch(
+  displayFilters,
+  async (newDisplayFilters) => {
+    const apiFilters = { ...newDisplayFilters }
+
+    if (apiFilters.daysOfWeek?.length > 0) {
+      apiFilters.daysOfWeek = apiFilters.daysOfWeek.join(',')
+    }
+
+    filters.value = apiFilters
+    currentPage.value = 0
+    await fetchRouteSchedules() // Remove debounced fetch
+  },
+  { deep: true },
+)
+
+const handlePageChange = async (page) => {
+  currentPage.value = page
+  await fetchRouteSchedules()
 }
 
 // Fetch routes
 const fetchRoutes = async () => {
   try {
-    const response = await getAllRoutes()
+    const response = await getAllRoutesWithoutPagination()
     routes.value = response
   } catch (error) {
     console.error('Error fetching routes:', error)
@@ -324,6 +410,13 @@ const handleSubmit = async () => {
 onMounted(() => {
   fetchRouteSchedules()
   fetchRoutes()
+
+  document.addEventListener('click', (e) => {
+    const dropdown = document.querySelector('.dropdown')
+    if (dropdown && !dropdown.contains(e.target)) {
+      showDaysDropdown.value = false
+    }
+  })
 })
 </script>
 
@@ -349,5 +442,41 @@ onMounted(() => {
 
 .form-check-label {
   font-size: 12px;
+}
+
+.form-select[multiple] {
+  height: auto;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.form-select[multiple] option {
+  padding: 0.3rem 0.5rem;
+  border-bottom: 1px solid #eee;
+}
+
+.form-select[multiple] option:hover {
+  background-color: #f8f9fa;
+}
+
+.form-select[multiple] option:checked {
+  background-color: #0d6efd;
+  color: white;
+}
+
+.dropdown-menu {
+  min-width: 200px;
+}
+
+.dropdown-menu.show {
+  display: block;
+}
+
+.form-check {
+  padding: 0.25rem 1.5rem;
+}
+
+.form-check:hover {
+  background-color: #f8f9fa;
 }
 </style>

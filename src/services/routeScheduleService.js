@@ -12,9 +12,20 @@ export const createRouteSchedule = async (routeSchedule) => {
 }
 
 // Get all route schedules
-export const getAllRouteSchedules = async () => {
+export const getAllRouteSchedules = async (page = 0, size = 10, filters = {}) => {
   try {
-    const response = await api.get('/route-schedules')
+    const { daysOfWeek, ...otherFilters } = filters
+
+    const params = {
+      page,
+      size,
+      ...otherFilters,
+      ...(daysOfWeek
+        ? { daysOfWeek: typeof daysOfWeek === 'string' ? daysOfWeek : daysOfWeek.join(',') }
+        : {}),
+    }
+
+    const response = await api.get('/route-schedules', { params })
     return response
   } catch (error) {
     console.error('Error fetching route schedules:', error)

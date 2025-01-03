@@ -37,6 +37,16 @@ export const getAllRoutes = async (page = 0, size = 10, filters = {}) => {
   }
 }
 
+export const getAllRoutesWithoutPagination = async () => {
+  try {
+    const response = await api.get('/routes/all')
+    return response
+  } catch (error) {
+    console.error('Error fetching routes:', error)
+    throw error
+  }
+}
+
 // Get a route by ID
 export const getRouteById = async (routeId) => {
   try {
