@@ -8,7 +8,7 @@
     >
       <router-link to="/account-settings" class="head">
         <div class="user-img">
-          <img src="\images\sidebar\cms.svg" alt="" />
+          <img src="\images\sidebar\cms.png" alt="" />
         </div>
         <div class="user-details" :class="{ 'show-details': isExpanded }">
           <p class="title">Admin</p>
@@ -82,7 +82,7 @@ const menuItems = [
   {
     key: 'assistant',
     to: '/assistant',
-    icon: 'images/sidebar/assistant.svg',
+    icon: 'images/sidebar/assistant.png',
     text: 'Phụ xe',
   },
   {
@@ -145,7 +145,6 @@ onMounted(() => {
 .user-img img {
   width: 40px;
   height: 40px;
-  border-radius: 50%;
 }
 * {
   margin: 0;
