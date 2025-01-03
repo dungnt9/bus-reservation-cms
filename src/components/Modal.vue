@@ -18,7 +18,17 @@
 </template>
 
 <script setup>
-import { defineEmits } from 'vue'
+import { defineProps, defineEmits } from 'vue'
+const props = defineProps({
+  modelValue: {
+    type: Boolean,
+    default: false,
+  },
+  title: {
+    type: String,
+    default: '',
+  },
+})
 
 const emit = defineEmits(['update:modelValue'])
 
