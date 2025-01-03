@@ -20,6 +20,22 @@ export const getAllTrips = async () => {
   }
 }
 
+export const getAllTripsWithFilters = async (page = 0, size = 10, filters = {}) => {
+  try {
+    const params = {
+      page,
+      size,
+      ...filters,
+    }
+
+    const response = await api.get('/trips', { params })
+    return response
+  } catch (error) {
+    console.error('Error fetching trips:', error)
+    throw error
+  }
+}
+
 export const getTripById = async (tripId) => {
   try {
     const response = await api.get(`/trips/${tripId}`)

@@ -19,12 +19,38 @@
         </tr>
         <tr>
           <th v-for="(label, column) in columns" :key="column + '-filter'">
-            <input
-              type="text"
-              class="form-control form-control-sm"
-              :placeholder="`Lọc ${label}`"
-              v-model="filters[column]"
-            />
+            <template v-if="column === 'tripStatus'">
+              <select class="form-control form-control-sm" v-model="displayFilters[column]">
+                <option value="">Tất cả</option>
+                <option value="in_progress">Đang chạy</option>
+                <option value="completed">Đã hoàn thành</option>
+                <option value="cancelled">Đã hủy</option>
+              </select>
+            </template>
+            <template
+              v-else-if="
+                [
+                  'scheduledDeparture',
+                  'scheduledArrival',
+                  'actualDeparture',
+                  'actualArrival',
+                ].includes(column)
+              "
+            >
+              <input
+                type="datetime-local"
+                class="form-control form-control-sm"
+                v-model="displayFilters[column]"
+              />
+            </template>
+            <template v-else>
+              <input
+                type="text"
+                class="form-control form-control-sm"
+                :placeholder="'Lọc ' + label"
+                v-model="displayFilters[column]"
+              />
+            </template>
           </th>
           <th></th>
         </tr>
@@ -238,11 +264,18 @@
         </button>
       </template>
     </CustomModal>
+
+    <Pagination
+      :current-page="currentPage"
+      :total-pages="totalPages"
+      @page-change="handlePageChange"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
+import Pagination from '../components/Pagination.vue'
 import {
   getAllTrips,
   createTrip,
@@ -256,6 +289,7 @@ import {
   getVehiclesForTrip,
 } from '../services/tripService'
 import CustomModal from '../components/Modal.vue'
+import { getAllTripsWithFilters } from '../services/tripService'
 
 // Reactive state
 const trips = ref([])
@@ -267,6 +301,11 @@ const showModal = ref(false)
 const currentTrip = ref(null)
 const filters = ref({})
 const validationErrors = ref({})
+
+const currentPage = ref(0)
+const pageSize = ref(10)
+const totalPages = ref(0)
+const displayFilters = ref({})
 
 // Columns definition
 const columns = {
@@ -476,6 +515,40 @@ const fetchData = async () => {
   }
 }
 
+const fetchTrips = async () => {
+  try {
+    const response = await getAllTripsWithFilters(
+      currentPage.value,
+      pageSize.value,
+      displayFilters.value,
+    )
+    trips.value = response.content || []
+    totalPages.value = response.totalPages || 0
+  } catch (error) {
+    console.error('Error:', error)
+    trips.value = []
+    totalPages.value = 0
+    if (error.response?.data?.message) {
+      alert(`Lỗi: ${error.response.data.message}`)
+    }
+  }
+}
+
+watch(
+  displayFilters,
+  async (newFilters) => {
+    const apiFilters = { ...newFilters }
+    currentPage.value = 0
+    await fetchTrips()
+  },
+  { deep: true },
+)
+
+const handlePageChange = async (page) => {
+  currentPage.value = page
+  await fetchTrips()
+}
+
 const openModal = async (trip = null) => {
   currentTrip.value = trip
   validationErrors.value = {}
@@ -512,15 +585,17 @@ const openModal = async (trip = null) => {
       }
     } else {
       // Khi tạo mới
-      const [driversData, assistantsData, vehiclesData] = await Promise.all([
+      const [driversData, assistantsData, vehiclesData, schedulesData] = await Promise.all([
         getAvailableDrivers(),
         getAvailableAssistants(),
         getAvailableVehicles(),
+        getActiveRouteSchedules(),
       ])
 
       drivers.value = driversData
       assistants.value = assistantsData
       availableVehicles.value = vehiclesData
+      routeSchedules.value = schedulesData
 
       // Reset form
       form.value = {
@@ -597,7 +672,7 @@ const handleSubmit = async () => {
       await createTrip(tripData)
     }
 
-    await fetchData()
+    await fetchTrips()
     closeModal()
   } catch (error) {
     console.error('Error saving trip:', error)
@@ -607,7 +682,7 @@ const handleSubmit = async () => {
 }
 
 // Fetch data on component mount
-onMounted(fetchData)
+onMounted(fetchTrips)
 </script>
 
 <style scoped>
