@@ -1,23 +1,23 @@
 // AdminSettings.vue
 <template>
   <div class="bg-white p-4 rounded-lg border">
-    <h2 class="text-primary fw-bold mb-4">Account Settings</h2>
+    <h2 class="text-primary fw-bold mb-4">Thông tin tài khoản</h2>
 
     <div class="settings-tabs mb-4">
       <button
         :class="['tab-btn', { active: activeTab === 'profile' }]"
         @click="activeTab = 'profile'"
       >
-        Profile
+        Thông tin cá nhân
       </button>
       <button
         :class="['tab-btn', { active: activeTab === 'password' }]"
         @click="activeTab = 'password'"
       >
-        Change Password
+        Đổi mật khẩu
       </button>
       <button :class="['tab-btn', { active: activeTab === 'phone' }]" @click="activeTab = 'phone'">
-        Change Phone
+        Đổi số điện thoại
       </button>
     </div>
 
@@ -26,7 +26,7 @@
       <form @submit.prevent="handleUpdateProfile" novalidate>
         <div class="row">
           <div class="col-md-6 mb-3">
-            <label class="form-label">Full Name<span class="text-danger">*</span></label>
+            <label class="form-label">Họ và tên<span class="text-danger">*</span></label>
             <input
               type="text"
               class="form-control"
@@ -38,7 +38,7 @@
             </div>
           </div>
           <div class="col-md-6 mb-3">
-            <label class="form-label">Phone Number<span class="text-danger">*</span></label>
+            <label class="form-label">Số điện thoại<span class="text-danger">*</span></label>
             <input type="tel" class="form-control" v-model="profileForm.phoneNumber" disabled />
           </div>
         </div>
@@ -57,18 +57,18 @@
             </div>
           </div>
           <div class="col-md-6 mb-3">
-            <label class="form-label">Gender</label>
+            <label class="form-label">Giới tính</label>
             <select class="form-control" v-model="profileForm.gender">
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-              <option value="other">Other</option>
+              <option value="male">Nam</option>
+              <option value="female">Nữ</option>
+              <option value="other">Khác</option>
             </select>
           </div>
         </div>
 
         <div class="row">
           <div class="col-md-6 mb-3">
-            <label class="form-label">Address</label>
+            <label class="form-label">Địa chỉ</label>
             <input
               type="text"
               class="form-control"
@@ -80,7 +80,7 @@
             </div>
           </div>
           <div class="col-md-6 mb-3">
-            <label class="form-label">Date of Birth</label>
+            <label class="form-label">Ngày sinh</label>
             <input
               type="date"
               class="form-control"
@@ -91,7 +91,7 @@
         </div>
 
         <div class="d-flex justify-content-end">
-          <button type="submit" class="btn btn-primary">Update Profile</button>
+          <button type="submit" class="btn btn-primary">Cập nhật</button>
         </div>
       </form>
     </div>
@@ -100,7 +100,7 @@
     <div v-if="activeTab === 'password'" class="settings-form">
       <form @submit.prevent="handleChangePassword" novalidate>
         <div class="mb-3">
-          <label class="form-label">Current Password<span class="text-danger">*</span></label>
+          <label class="form-label">Mật khẩu hiện tại<span class="text-danger">*</span></label>
           <div class="position-relative">
             <input
               :type="showCurrentPassword ? 'text' : 'password'"
@@ -129,7 +129,7 @@
         </div>
 
         <div class="mb-3">
-          <label class="form-label">New Password<span class="text-danger">*</span></label>
+          <label class="form-label">Mật khẩu mới<span class="text-danger">*</span></label>
           <div class="position-relative">
             <input
               :type="showNewPassword ? 'text' : 'password'"
@@ -156,7 +156,7 @@
         </div>
 
         <div class="mb-3">
-          <label class="form-label">Confirm New Password<span class="text-danger">*</span></label>
+          <label class="form-label">Nhập lại mật khẩu mới<span class="text-danger">*</span></label>
           <div class="position-relative">
             <input
               :type="showConfirmPassword ? 'text' : 'password'"
@@ -185,7 +185,7 @@
         </div>
 
         <div class="d-flex justify-content-end">
-          <button type="submit" class="btn btn-primary">Change Password</button>
+          <button type="submit" class="btn btn-primary">Đổi mật khẩu</button>
         </div>
       </form>
     </div>
