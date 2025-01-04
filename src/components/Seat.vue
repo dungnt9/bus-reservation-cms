@@ -6,6 +6,7 @@
       <!-- Cột 1: Lái xe và các ghế -->
       <button class="position-box" style="grid-column: 1; grid-row: 1">Lái Xe</button>
       <button
+        type="button"
         v-for="seatNum in [1, 5, 9, 13, 17, 21, 25, 29, 33, 37]"
         :key="seatNum"
         class="seat-btn"
@@ -20,6 +21,7 @@
         {{ seatNum }}
       </button>
       <button
+        type="button"
         class="seat-btn"
         :class="{
           selected: modelValue.includes(41),
@@ -34,6 +36,7 @@
 
       <!-- Cột 2: Các ghế -->
       <button
+        type="button"
         v-for="seatNum in [2, 6, 10, 14, 18, 22, 26, 30, 34, 38]"
         :key="seatNum"
         class="seat-btn"
@@ -48,6 +51,7 @@
         {{ seatNum }}
       </button>
       <button
+        type="button"
         class="seat-btn"
         :class="{
           selected: modelValue.includes(42),
@@ -63,6 +67,7 @@
       <!-- Cột 3: Phụ xe và ghế 43 -->
       <button class="position-box" style="grid-column: 3; grid-row: 1">Phụ Xe</button>
       <button
+        type="button"
         class="seat-btn"
         :class="{
           selected: modelValue.includes(43),
@@ -77,6 +82,7 @@
 
       <!-- Cột 4: Các ghế -->
       <button
+        type="button"
         v-for="seatNum in [3, 7, 11, 15, 19, 23, 27, 31, 35, 39]"
         :key="seatNum"
         class="seat-btn"
@@ -91,6 +97,7 @@
         {{ seatNum }}
       </button>
       <button
+        type="button"
         class="seat-btn"
         :class="{
           selected: modelValue.includes(44),
@@ -106,6 +113,7 @@
       <!-- Cột 5: Cửa và các ghế -->
       <button class="position-box" style="grid-column: 5; grid-row: 1">Cửa</button>
       <button
+        type="button"
         v-for="seatNum in [4, 8, 12, 16, 20, 24, 28, 32, 36, 40]"
         :key="seatNum"
         class="seat-btn"
@@ -120,6 +128,7 @@
         {{ seatNum }}
       </button>
       <button
+        type="button"
         class="seat-btn"
         :class="{
           selected: modelValue.includes(45),

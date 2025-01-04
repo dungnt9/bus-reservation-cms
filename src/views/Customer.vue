@@ -202,7 +202,6 @@
           v-if="showSeatSelection"
           v-model="invoiceForm.selectedSeats"
           :booked-seats="bookedSeats"
-          @seat-selected="handleSeatSelection"
         />
 
         <!-- Thông tin thanh toán -->
@@ -357,15 +356,6 @@ const isValidInvoice = computed(() => {
     invoiceForm.value.paymentMethod
   )
 })
-
-const handleSeatSelection = (selectedSeats) => {
-  if (!ticketPrice.value) {
-    console.error('No ticket price available')
-    return
-  }
-  invoiceForm.value.totalPrice = selectedSeats.length * ticketPrice.value
-  console.log('Updated total price:', invoiceForm.value.totalPrice)
-}
 
 // Methods
 const formatColumnValue = (value, column) => {
@@ -644,6 +634,17 @@ watch(
     filters.value = apiFilters
     currentPage.value = 0
     debouncedFetch()
+  },
+  { deep: true },
+)
+
+watch(
+  () => invoiceForm.value.selectedSeats,
+  (newSeats) => {
+    if (ticketPrice.value) {
+      invoiceForm.value.totalPrice = newSeats.length * ticketPrice.value
+      console.log('Updating total price:', invoiceForm.value.totalPrice)
+    }
   },
   { deep: true },
 )
