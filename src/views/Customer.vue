@@ -168,7 +168,11 @@
             <label class="form-label">Chuyến xe<span class="text-danger">*</span></label>
             <select class="form-control" v-model="invoiceForm.tripId" @change="handleTripChange">
               <option value="">Chọn chuyến xe</option>
-              <option v-for="trip in availableTrips" :key="trip.tripId" :value="trip.tripId">
+              <option
+                v-for="trip in availableTrips.content"
+                :key="trip.tripId"
+                :value="trip.tripId"
+              >
                 {{ formatTripOption(trip) }}
               </option>
             </select>
