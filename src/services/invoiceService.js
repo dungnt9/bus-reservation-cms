@@ -64,8 +64,11 @@ export const getInvoiceById = async (invoiceId) => {
 
 export const updateInvoice = async (invoiceId, invoiceDetails) => {
   try {
-    const response = await api.put(`/invoices/${invoiceId}`, invoiceDetails)
-    return response
+    const response = await api.put(`/invoices/${invoiceId}`, {
+      paymentStatus: invoiceDetails.paymentStatus,
+      paymentMethod: invoiceDetails.paymentMethod,
+    })
+    return response.data
   } catch (error) {
     console.error(`Error updating invoice with ID ${invoiceId}:`, error)
     throw error
