@@ -34,7 +34,7 @@
               </router-link>
             </li>
             <li>
-              <a href="#" @click.prevent="handleLogout" class="menu-link">
+              <a href="#" @click.prevent="showLogoutConfirmation" class="menu-link">
                 <div class="icon-wrapper">
                   <img class="img-li" src="\images\sidebar\logout.svg" alt="" />
                 </div>
@@ -45,6 +45,17 @@
         </div>
       </div>
     </div>
+    <Modal v-model="showLogoutModal" title="Xác nhận đăng xuất">
+      <div class="logout-confirmation">
+        <p>Bạn có chắc chắn muốn đăng xuất không?</p>
+      </div>
+      <template #footer>
+        <div class="modal-footer-buttons">
+          <button @click="cancelLogout" class="cancel-btn">Hủy</button>
+          <button @click="confirmLogout" class="confirm-btn">Đăng xuất</button>
+        </div>
+      </template>
+    </Modal>
   </div>
 </template>
 
@@ -52,6 +63,22 @@
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import authService from '@/services/authService'
+import Modal from './Modal.vue'
+const showLogoutModal = ref(false)
+
+const showLogoutConfirmation = () => {
+  showLogoutModal.value = true
+}
+
+const cancelLogout = () => {
+  showLogoutModal.value = false
+}
+
+const confirmLogout = () => {
+  authService.logout()
+  showLogoutModal.value = false
+  router.push('/login')
+}
 
 // State for sidebar expansion
 const router = useRouter()
@@ -270,5 +297,44 @@ li {
   width: 1.75rem;
   height: auto;
   flex-shrink: 0;
+}
+
+.logout-confirmation {
+  text-align: center;
+  padding: 20px 0;
+  font-size: 1.5rem;
+}
+
+.modal-footer-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.cancel-btn,
+.confirm-btn {
+  padding: 8px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  border: none;
+}
+
+.cancel-btn {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+.confirm-btn {
+  background-color: #dc3545;
+  color: white;
+}
+
+.cancel-btn:hover {
+  background-color: #d0d0d0;
+}
+
+.confirm-btn:hover {
+  background-color: #c82333;
 }
 </style>
