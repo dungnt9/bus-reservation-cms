@@ -510,7 +510,7 @@ const fetchData = async () => {
     routeSchedules.value = schedulesData
     availableVehicles.value = vehiclesData
   } catch (error) {
-    console.error('Error fetching data:', error)
+    console.error('Có lỗi xảy ra khi tải dữ liệu:', error)
     alert('Có lỗi xảy ra khi tải dữ liệu!')
   }
 }
@@ -616,7 +616,7 @@ const openModal = async (trip = null) => {
     }
     showModal.value = true
   } catch (error) {
-    console.error('Error loading modal data:', error)
+    console.error('Lỗi khi tải dữ liệu:', error)
     alert('Có lỗi xảy ra khi tải dữ liệu!')
   }
 }
@@ -675,7 +675,7 @@ const handleSubmit = async () => {
     await fetchTrips()
     closeModal()
   } catch (error) {
-    console.error('Error saving trip:', error)
+    console.error('Có lỗi khi lưu chuyến xe:', error)
     const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra khi lưu thông tin!'
     alert(errorMessage)
   }

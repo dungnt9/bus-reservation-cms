@@ -38,7 +38,7 @@
                 <div class="icon-wrapper">
                   <img class="img-li" src="\images\sidebar\logout.svg" alt="" />
                 </div>
-                <span class="text" :class="{ 'show-text': isExpanded }">Logout</span>
+                <span class="text" :class="{ 'show-text': isExpanded }">Đăng xuất</span>
               </a>
             </li>
           </ul>

@@ -331,7 +331,7 @@ const handleSubmit = async () => {
     await fetchInvoices()
     closeModal()
   } catch (error) {
-    console.error('Error updating invoice:', error)
+    console.error('Lỗi khi cập nhật hóa đơn:', error)
     alert('Có lỗi xảy ra khi cập nhật hóa đơn!')
   }
 }

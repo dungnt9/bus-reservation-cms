@@ -364,17 +364,17 @@ const validateProfileForm = () => {
   let isValid = true
 
   if (!validName(profileForm.fullName)) {
-    validationErrors.fullName = 'Full name must be 2-100 characters without special characters'
+    validationErrors.fullName = 'Tên phải có ít nhất 2 ký tự và không chứa ký tự đặc biệt'
     isValid = false
   }
 
   if (profileForm.email && !validEmail(profileForm.email)) {
-    validationErrors.email = 'Invalid email format'
+    validationErrors.email = 'Không đúng định dạng email'
     isValid = false
   }
 
   if (profileForm.address && !validAddress(profileForm.address)) {
-    validationErrors.address = 'Address cannot contain emoji and must be under 255 characters'
+    validationErrors.address = 'Địa chỉ không được bao gồm emoji và phải ít hơn 255 ký tự.'
     isValid = false
   }
 
@@ -387,17 +387,17 @@ const validatePasswordForm = () => {
   let isValid = true
 
   if (!passwordForm.currentPassword) {
-    validationErrors.currentPassword = 'Current password is required'
+    validationErrors.currentPassword = 'Mật khẩu hiện tại không được để trống'
     isValid = false
   }
 
   if (!passwordForm.newPassword || passwordForm.newPassword.length < 6) {
-    validationErrors.newPassword = 'New password must be at least 6 characters'
+    validationErrors.newPassword = 'Mật khẩu mới phải có ít nhất 6 ký tự'
     isValid = false
   }
 
   if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-    validationErrors.confirmPassword = 'Passwords do not match'
+    validationErrors.confirmPassword = 'Mật khẩu không khớp'
     isValid = false
   }
 
@@ -501,10 +501,10 @@ const handleUpdateProfile = () => {
       ...profileForm,
     })
     .then((response) => {
-      alert('Profile updated successfully!')
+      alert('Cập nhật thông tin thành công!')
     })
     .catch((error) => {
-      alert(error.message || 'Failed to update profile')
+      alert(error.message || 'Lỗi khi cập nhật thông tin')
     })
 }
 
@@ -519,12 +519,12 @@ const handleChangePassword = () => {
       passwordForm.newPassword,
     )
     .then(() => {
-      alert('Password changed successfully! Please login again.')
+      alert('Đổi mật khẩu thành công! Vui lòng đăng nhập lại.')
       authService.logout()
       router.push('/login')
     })
     .catch((error) => {
-      alert(error.message || 'Failed to change password')
+      alert(error.message || 'Lỗi khi đổi mật khẩu')
     })
 }
 
