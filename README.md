@@ -1,41 +1,71 @@
-# cms
+# Bus Management System (CMS)
 
-This template should help get you started developing with Vue 3 in Vite.
+A comprehensive bus management system built with Vue.js that helps manage bus routes, schedules, tickets, and passenger information.
 
-## Recommended IDE Setup
+---
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+## Features
 
-## Customize configuration
+### User Management
+- Admin management
+- Driver management
+- Assistant management
+- Customer management
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+### Route Management
+- Create and manage bus routes
+- Set ticket prices
+- Track distances and estimated durations
 
-## Project Setup
+### Trip Management
+- Schedule trips
+- Assign drivers and vehicles
+- Track departure/arrival times
+- Monitor seat availability
 
+### Ticket & Booking
+- Interactive seat selection
+- Invoice generation
+- Payment processing (Cash/Card)
+- Booking status tracking
+
+### Vehicle Management
+- Track vehicle information
+- Manage seat configurations
+- Monitor vehicle availability
+
+### Reporting & Analytics
+- Revenue tracking
+- Trip completion rates
+- Customer trends
+- Performance metrics
+
+---
+
+## Tech Stack
+- **Vue.js 3**
+- **Vue Router**
+- **Pinia (State Management)**
+- **Bootstrap Vue**
+- **Chart.js**
+- **Axios**
+- **FontAwesome**
+
+---
+
+## Getting Started
+
+### Install dependencies:
 ```sh
 npm install
 ```
 
-### Compile and Hot-Reload for Development
-
+### Run development server:
 ```sh
 npm run dev
 ```
 
-### Compile and Minify for Production
-
+### Build for production:
 ```sh
 npm run build
-```
-
-### Run Unit Tests with [Vitest](https://vitest.dev/)
-
-```sh
-npm run test:unit
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-npm run lint
 ```
